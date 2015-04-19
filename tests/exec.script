@@ -1,21 +1,150 @@
-Script started on Sat 18 Apr 2015 10:26:23 PM PDT
+Script started on Sat 18 Apr 2015 11:05:13 PM PDT
 ~
 hzhu007@hammer $ cd rshell
 ~/rshell
-hzhu007@hammer $ make
+hzhu007@hammer $ make [K[Ke
 mkdir bin
 g++ -Wall -Werror -ansi -pedantic ./src/main.cpp -o bin/rshell
 ~/rshell
-hzhu007@hammer $ bin/rshe;;[K[Kll
-[rshell]hzhu007@hammer.cs.ucr.edu $ ls
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test comment
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test one commadn  nd
+[rshell]hzhu007@hammer.cs.ucr.edu $ #t  ls
 bin  LICENSE  Makefile	src  tests
-[rshell]hzhu007@hammer.cs.ucr.edu $ ls -a
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test a wrong command
+[rshell]hzhu007@hammer.cs.ucr.edu $ hahaha
+execvp() in execution(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test with one flag
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -a l
+total 36
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:59 bin
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   184 Apr 18 18:17 Makefile
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:12 src
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:53 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test with one flag and spaces
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls         -a
 .  ..  bin  .git  LICENSE  Makefile  src  tests
-[rshell]hzhu007@hammer.cs.ucr.edu $ ls exit
-ls: cannot access exit: No such file or directory
-[rshell]hzhu007@hammer.cs.ucr.edu $ exit
+[rshell]hzhu007@hammer.cs.ucr.edu $ test    #test with two flags
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -a -l
+total 48
+drwx------ 6 hzhu007 csmajs  4096 Apr 18 22:59 .
+drwx------ 8 hzhu007 csmajs  4096 Apr 18 22:53 ..
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:59 bin
+drwx------ 8 hzhu007 csmajs  4096 Apr 18 22:31 .git
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   184 Apr 18 18:17 Makefile
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:12 src
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:53 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -al
+total 48
+drwx------ 6 hzhu007 csmajs  4096 Apr 18 22:59 .
+drwx------ 8 hzhu007 csmajs  4096 Apr 18 22:53 ..
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:59 bin
+drwx------ 8 hzhu007 csmajs  4096 Apr 18 22:31 .git
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   184 Apr 18 18:17 Makefile
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:12 src
+drwx------ 2 hzhu007 csmajs  4096 Apr 18 22:53 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test with the ree flags
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -a -l -h
+total 48K
+drwx------ 6 hzhu007 csmajs 4.0K Apr 18 22:59 .
+drwx------ 8 hzhu007 csmajs 4.0K Apr 18 22:53 ..
+drwx------ 2 hzhu007 csmajs 4.0K Apr 18 22:59 bin
+drwx------ 8 hzhu007 csmajs 4.0K Apr 18 22:31 .git
+-rw------- 1 hzhu007 csmajs  18K Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs  184 Apr 18 18:17 Makefile
+drwx------ 2 hzhu007 csmajs 4.0K Apr 18 22:12 src
+drwx------ 2 hzhu007 csmajs 4.0K Apr 18 22:53 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -alg h
+total 48K
+drwx------ 6 hzhu007 csmajs 4.0K Apr 18 22:59 .
+drwx------ 8 hzhu007 csmajs 4.0K Apr 18 22:53 ..
+drwx------ 2 hzhu007 csmajs 4.0K Apr 18 22:59 bin
+drwx------ 8 hzhu007 csmajs 4.0K Apr 18 22:31 .git
+-rw------- 1 hzhu007 csmajs  18K Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs  184 Apr 18 18:17 Makefile
+drwx------ 2 hzhu007 csmajs 4.0K Apr 18 22:12 src
+drwx------ 2 hzhu007 csmajs 4.0K Apr 18 22:53 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test ; ''^[[D;      ;'
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls;ls
+bin  LICENSE  Makefile	src  tests
+bin  LICENSE  Makefile	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls;;ls^[[D      ;;ls;pwd
+bin  LICENSE  Makefile	src  tests
+bin  LICENSE  Makefile	src  tests
+/home/csmajs/hzhu007/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls ;  ; ;;;ls -a
+bin  LICENSE  Makefile	src  tests
+.  ..  bin  .git  LICENSE  Makefile  src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test       ls;;;;
+bin  LICENSE  Makefile	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ;;;ls
+bin  LICENSE  Makefile	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ;;;;
+[rshell]hzhu007@hammer.cs.ucr.edu $ test    #test &&
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls&&ls -a
+bin  LICENSE  Makefile	src  tests
+.  ..  bin  .git  LICENSE  Makefile  src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls &&     wrongco  &&ls^[[D^[[D         s
+execvp() in execution(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ &&
+[rshell]hzhu007@hammer.cs.ucr.edu $ &&&&
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls&&&&ls
+bin  LICENSE  Makefile	src  tests
+bin  LICENSE  Makefile	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls&&wrong&&ls^[[D^[[D        
+bin  LICENSE  Makefile	src  tests
+execvp() in execution(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ &&&
+execvp() in execution(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls  &&   ls
+bin  LICENSE  Makefile	src  tests
+bin  LICENSE  Makefile	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test ||
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls||pwd
+bin  LICENSE  Makefile	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ wrong||pwd
+execvp() in execution(): No such file or directory
+/home/csmajs/hzhu007/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ ||
+[rshell]hzhu007@hammer.cs.ucr.edu $ ||||
+[rshell]hzhu007@hammer.cs.ucr.edu $ |||
+[rshell]hzhu007@hammer.cs.ucr.edu $ pwd|| ^[[D        ||   ls||   pwd
+/home/csmajs/hzhu007/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test combination
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -a;echo hello             ;  echo hello && echo world ||pwd;  gitstat       status
+.  ..  bin  .git  LICENSE  Makefile  src  tests
+hello
+world
+# On branch master
+# Changed but not updated:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   tests/exec.script
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	bin/
+#	src/a.out
+no changes added to commit (use "git add" and/or "git commit -a")
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test commented exit
+[rshell]hzhu007@hammer.cs.ucr.edu $ #exit
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test spaces s before co  commented exit
+[rshell]hzhu007@hammer.cs.ucr.edu $    #exit
+[rshell]hzhu007@hammer.cs.ucr.edu $ #regular exit
+[rshell]hzhu007@hammer.cs.ucr.edu $ #regular exit             exit
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #exit after     co  in  after ;
+[rshell]hzhu007@hammer.cs.ucr.edu $ ;;;;exit^[[D          exit
+execvp() in execution(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ #\  ;;;;exit
 ~/rshell
 hzhu007@hammer $ exit
 exit
 
-Script done on Sat 18 Apr 2015 10:36:10 PM PDT
+Script done on Sat 18 Apr 2015 11:23:19 PM PDT
