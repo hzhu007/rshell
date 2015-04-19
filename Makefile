@@ -6,5 +6,8 @@ rshell: ./src/main.cpp
 
 all: rshell
 
+run: ./bin/rshell
+	./bin/rshell
+
 clean:
 	rm -rf bin

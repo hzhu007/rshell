@@ -15,7 +15,6 @@ char* command_input();
 void execution(char* command);
 void handle_command(char* command);
 
-enum connector_t {SEMI, AND, OR, SINGLE};
 static bool lastSucc = true;
 static bool jumpCmd = false;
 
@@ -117,7 +116,6 @@ void execution(char* command)    //deal with one single command
 void handle_command(char* command)
 {
     char* curr_cmd = command;
-    connector_t connector = SINGLE;
     jumpCmd = false;
     lastSucc = true;
     int i = 0;
