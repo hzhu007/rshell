@@ -26,8 +26,13 @@ int main()
     {
         display_info();
         char* command = command_input();
+        //cout << "command: " << command << endl;
+        if(command == NULL)
+        {
+            continue;
+        }
+
         if(0 == strcmp(command, "exit"))
-        //if(0 == strncmp(command, "exit", sizeof(command)))
             exit(1);
         else
         {
@@ -39,13 +44,13 @@ int main()
     return 0;
 }
 
-void display_info()
+void display_info()    // print prompt "[rshell]user@host $ "
 {
     char* userName;
     char hostName[100];
     userName = getlogin();
     gethostname(hostName, 100);
-    printf("[rshell]%s@%s $ ", userName, hostName); //print prompt "[rshell]user@host $ "
+    printf("[rshell]%s@%s $ ", userName, hostName);
 }
 
 char* command_input()
@@ -54,7 +59,7 @@ char* command_input()
     getline(cin, input);
     if (input == "")
     {
-        cout << "empty input" << endl;
+        //cout << "empty input" << endl;
         return '\0';
     }
     //cout << input << endl;
@@ -72,7 +77,7 @@ char* command_input()
     return strtok(input_cstr, "#");    //discard all char include and after '#'
 }
 
-void execution(char* command)
+void execution(char* command)    //deal with one single command
 {
     char* argv[10000];
     int i = 0;
@@ -101,7 +106,7 @@ void execution(char* command)
     else    //parent process
     {
         int childStatus;
-        if(-1 == wait(&childStatus))
+        if(-1 == waitpid(pid, &childStatus, 0))
             perror("wait() in execution()");
         //cout << WEXITSTATUS(childStatus) << endl;
         if(WEXITSTATUS(childStatus) == 1)
@@ -118,6 +123,7 @@ void execution(char* command)
 
 void handle_command(char* command)
 {
+    //cout << "hahaha";
     char* curr_cmd = command;
     connector_t connector = SINGLE;
     jumpCmd = false;
@@ -183,7 +189,5 @@ void handle_command(char* command)
             }
         }
     }
-
-    //cout << connector;
     return;
 }
