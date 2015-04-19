@@ -1,6 +1,6 @@
 #Rshell
 ##Introduction
-This program is a command shell called *rshell*. Rshell uses syscalls fork(), waitpid()and execp() to execute commands from user input. It can perform the following steps:
+This program is a command shell called *rshell*. Rshell uses syscalls fork(), waitpid() and execp() to execute commands from user input. It can perform the following steps:
 
 1. Print a command prompt `[rshell]username@hostname $ `
 
@@ -11,6 +11,10 @@ This program is a command shell called *rshell*. Rshell uses syscalls fork(), wa
     connector   = || or && or ;
     ```
 where executable is an executable program in the PATH and argumentList is a list of zero or more arguments separated by spaces. The connector is an optional way you can run multiple commands at once. If a command is followed by ```;```, then the next command is always executed; if a command is followed by ```&&```, then the next command is executed only if the first one succeeds; if a command is followed by ```||```, then the next command is executed only if the first one fails.
+
+Anything between two connectors(including the beginning and the end of a input line) would be considered as an executable command and be passed into ```execvp()```. For example, ```;;```would be considered as three empty commands. And ```&&&```would be considered as an empty command and ```&```connected by ```&&```. Notice this is **different** from original bash.
+
+Anything that appears after a ```#``` character will be considered a comment.
 
 ## Installation
     git clone https://github.com/hzhu007/rshell.git
