@@ -53,22 +53,30 @@ char* command_input()
 {
     string input;
     getline(cin, input);
-    if (input == "")
-    {
-        return '\0';
-    }
     char* input_cstr = new char [input.length()+1];
     strcpy(input_cstr, input.c_str());
     int countSpace = 0;
+    for (int i = 0; *(input_cstr+i) != '\0'; ++i)
+    {
+        if (*(input_cstr+i) == '#')
+        {
+            *(input_cstr+i) = '\0';
+            break;
+        }
+    }
     for (int i = 0; *(input_cstr+i) != '\0'; ++i)   //remove all space and tab
     {
         if (*(input_cstr+i)==' ' || *(input_cstr+i) == '\t')
             ++countSpace;
         else
+        {
             break;
+        }
     }
     input_cstr += countSpace;
-    return strtok(input_cstr, "#");    //discard all char include and after '#'
+    //char* command = strtok(input_cstr, "#");    //discard all char include and after '#'
+    //delete[] input_cstr;
+    return input_cstr;
 }
 
 void execution(char* command)    //deal with one single command
