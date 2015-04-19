@@ -1,6 +1,6 @@
 #Rshell
 ##Introduction
-This program is a command shell called *rshell*. It can perform the following steps:
+This program is a command shell called *rshell*. Rshell uses syscalls fork(), waitpid()and execp() to execute commands from user input. It can perform the following steps:
 
 1. Print a command prompt `[rshell]username@hostname $ `
 
@@ -10,6 +10,7 @@ This program is a command shell called *rshell*. It can perform the following st
     cmd         = executable [ argumentList ] [ connector cmd ];
     connector   = || or && or ;
     ```
+where executable is an executable program in the PATH and argumentList is a list of zero or more arguments separated by spaces. The connector is an optional way you can run multiple commands at once. If a command is followed by ```;```, then the next command is always executed; if a command is followed by ```&&```, then the next command is executed only if the first one succeeds; if a command is followed by ```||```, then the next command is executed only if the first one fails.
 
 ## Installation
     git clone https://github.com/hzhu007/rshell.git
@@ -29,7 +30,7 @@ This program is a command shell called *rshell*. It can perform the following st
     # test with one parameter and a wrong flag
         ls -bang
     # test with one parameter and spaces :
-        ls      -l
+            ls      -l
     # test with two parameters:
         ls -a -l
         ls -al
@@ -57,11 +58,11 @@ This program is a command shell called *rshell*. It can perform the following st
         |||
         pwd || ls    ||     pwd
     # test combination
-        ls -a; echo hello &&echo world || pwd; git status
+        ls -a; echo hello  && echo world || pwd;  git   status
     # test commented exit
         #exit
     # test spaces before commented exit
-        #exit
+           #exit
     # regular exit
         exit
     # rshell is back up when this is run
