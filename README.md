@@ -1,10 +1,10 @@
 # Rshell
 ## Introduction
-This program is a command shell called **rshell**. It can perform the following steps:
+This program is a command shell called *rshell*. It can perform the following steps:
 1. Print a command prompt
 2. Read in a command on one line. Commands will have the form:
-''cmd         = executable [ argumentList ] [ connector cmd ]
-connector   = || or && or ;''
+``cmd         = executable [ argumentList ] [ connector cmd ]
+connector   = || or && or ;``
 ## Installation
 git clone https://github.com/hzhu007/rshell.git
 cd rshell
@@ -12,9 +12,9 @@ git checkout hw0
 make
 bin/rshell
 ## Test cases
-'#test comment'
-''#test a wrong command''
-'''    hahaha'''
+`#test comment`
+``#test a wrong command``
+```    hahaha```
 #test one command:
     ls
 #test with one parameter:
