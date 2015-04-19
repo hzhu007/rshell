@@ -91,7 +91,6 @@ void execution(char* command)    //deal with one single command
     }
     else if(0 == pid)   //child process
     {
-        lastSucc = true;
         if(-1 == execvp(argv[0], argv))    //execute one single command
         {
             perror("execvp() in execution()");
