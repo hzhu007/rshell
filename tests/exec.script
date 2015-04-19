@@ -148,3 +148,15 @@ hzhu007@hammer $ exit
 exit
 
 Script done on Sat 18 Apr 2015 11:23:19 PM PDT
+Script started on Sat 18 Apr 2015 11:43:09 PM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test exit with parameters
+[rshell]hzhu007@hammer.cs.ucr.edu $ exit --flag -a -num    num 123
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sat 18 Apr 2015 11:44:02 PM PDT
