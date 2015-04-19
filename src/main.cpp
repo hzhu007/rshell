@@ -12,7 +12,6 @@ using namespace std;
 
 void display_info();
 char* command_input();
-void parse(char* command, char **argv);
 void execution(char* command);
 void handle_command(char* command);
 
@@ -26,7 +25,6 @@ int main()
     {
         display_info();
         char* command = command_input();
-        //cout << "command: " << command << endl;
         if(command == NULL)
         {
             continue;
@@ -36,7 +34,6 @@ int main()
             exit(1);
         else
         {
-            //execution(command);
             handle_command(command);
         }
     }
@@ -59,10 +56,8 @@ char* command_input()
     getline(cin, input);
     if (input == "")
     {
-        //cout << "empty input" << endl;
         return '\0';
     }
-    //cout << input << endl;
     char* input_cstr = new char [input.length()+1];
     strcpy(input_cstr, input.c_str());
     int countSpace = 0;
@@ -108,7 +103,6 @@ void execution(char* command)    //deal with one single command
         int childStatus;
         if(-1 == waitpid(pid, &childStatus, 0))
             perror("wait() in execution()");
-        //cout << WEXITSTATUS(childStatus) << endl;
         if(WEXITSTATUS(childStatus) == 1)
         {
             lastSucc = false;
@@ -123,7 +117,6 @@ void execution(char* command)    //deal with one single command
 
 void handle_command(char* command)
 {
-    //cout << "hahaha";
     char* curr_cmd = command;
     connector_t connector = SINGLE;
     jumpCmd = false;
@@ -159,7 +152,6 @@ void handle_command(char* command)
                 curr_cmd = command+i+1;
             }
             jumpCmd = !lastSucc;
-            //cout << "&&: " << lastSucc << " " << jumpCmd;
         }
         else if(*(command+i) == '|' && *(command+i+1) == '|')
         {
@@ -179,13 +171,9 @@ void handle_command(char* command)
         ++i;
         if(*(command+i) == '\0')
         {
-           // cout << lastSucc << endl;
-           // cout << jumpCmd << endl;
             if(!jumpCmd)
             {
-                //cout << " a ";
                 execution(curr_cmd);
-                //cout << "b";
             }
         }
     }
