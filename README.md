@@ -6,9 +6,10 @@ This program is a command shell called *rshell*. It can perform the following st
 
 2. Read in a command on one line. Commands will have the form:
 
-    ```cmd         = executable [ argumentList ] [ connector cmd ];
-
-    connector   = || or && or ;```
+    ```
+    cmd         = executable [ argumentList ] [ connector cmd ];
+    connector   = || or && or ;
+    ```
 
 ## Installation
     git clone https://github.com/hzhu007/rshell.git
