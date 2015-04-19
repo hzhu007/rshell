@@ -1,0 +1,21 @@
+Script started on Sat 18 Apr 2015 10:26:23 PM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ make
+mkdir bin
+g++ -Wall -Werror -ansi -pedantic ./src/main.cpp -o bin/rshell
+~/rshell
+hzhu007@hammer $ bin/rshe;;[K[Kll
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls
+bin  LICENSE  Makefile	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -a
+.  ..  bin  .git  LICENSE  Makefile  src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls exit
+ls: cannot access exit: No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sat 18 Apr 2015 10:36:10 PM PDT
