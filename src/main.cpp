@@ -28,13 +28,7 @@ int main()
         {
             continue;
         }
-
-        if(0 == strcmp(command, "exit"))
-            exit(1);
-        else
-        {
-            handle_command(command);
-        }
+        handle_command(command);
     }
     return 0;
 }
@@ -78,6 +72,8 @@ char* command_input()   //get input and implement some preprocessing
 
 void execution(char* command)    //deal with one single command
 {
+    if(0 == strcmp(command, "exit"))
+        exit(1);
     char* argv[10000];
     int i = 0;
     argv[i] = strtok(command, " ");    //split one command and flags into several cstring when meet ' '
