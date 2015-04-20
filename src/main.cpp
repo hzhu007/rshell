@@ -72,7 +72,9 @@ char* command_input()   //get input and implement some preprocessing
 
 void execution(char* command)    //deal with one single command
 {
-    if(0 == strncmp(command, "exit", 4))
+    if(0 == strcmp(command, "exit"))
+        exit(1);
+    else if(0 == strncmp(command, "exit ", 5))
         exit(1);
     char* argv[10000];
     int i = 0;

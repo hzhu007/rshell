@@ -16,6 +16,11 @@ Anything between two connectors(including the beginning and the end of an input 
 
 Anything that appears after a ```#``` character will be considered a comment.
 
+## Prerequisites
+OS: Linux
+
+g++ compiler
+
 ## Installation
     git clone https://github.com/hzhu007/rshell.git
     cd rshell
@@ -72,3 +77,6 @@ Anything that appears after a ```#``` character will be considered a comment.
     # rshell is back up when this is run
     # test exit with parameters
         exit --flag -a num 123
+
+## Known bugs
+When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit```only ```ls```will be executed and rshell won't exit.
