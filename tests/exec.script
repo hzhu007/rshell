@@ -160,3 +160,17 @@ hzhu007@hammer $ exit
 exit
 
 Script done on Sat 18 Apr 2015 11:44:02 PM PDT
+Script started on Sun 19 Apr 2015 05:57:58 PM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test exit appended with invalid inpt ut
+[rshell]hzhu007@hammer.cs.ucr.edu $ exitsadsad
+execvp() in execution(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ eixt    exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sun 19 Apr 2015 05:58:37 PM PDT

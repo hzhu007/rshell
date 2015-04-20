@@ -14,7 +14,7 @@ where executable is an executable program in the PATH and argumentList is a list
 
 Anything between two connectors(including the beginning and the end of an input line) would be considered as an executable command and be passed into ```execvp()```. For example, ```;;```would be considered as three empty commands. And ```&&&```would be considered as an empty command and ```&```, which is a wrong command, connected by ```&&```. Notice this is **different** from original bash.
 
-Anything that appears after a ```#``` character will be considered a comment.
+Anything that appears after a ```#``` character will be considered as comment.
 
 ## Prerequisites
 OS: Linux
@@ -37,7 +37,7 @@ g++ compiler
     # test with one parameter:
         ls -a
     # test with one parameter and a wrong flag
-        ls -bang
+        ls -hahaha
     # test with one parameter and spaces :
             ls      -l
     # test with two parameters:
@@ -45,6 +45,7 @@ g++ compiler
         ls -al
     # test with three parameters:
         ls -a -l -h
+        ls -alh
     # test ;
         ls;ls
         ls;;;ls;;;;pwd
@@ -75,8 +76,10 @@ g++ compiler
     # regular exit
         exit
     # rshell is back up when this is run
+    # test exit appended with invalid input
+        exitwqew
     # test exit with parameters
         exit --flag -a num 123
 
 ## Known bugs
-When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit```only ```ls```will be executed and rshell won't exit.
+When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit``` only ```ls``` will be executed and *rshell* won't exit.
