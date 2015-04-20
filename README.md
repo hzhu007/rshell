@@ -34,6 +34,9 @@ g++ compiler
         hahaha
     # test one command:
         ls
+    # test comment after a command
+        ls#ls
+        ls # ls
     # test with one parameter:
         ls -a
     # test with one parameter and a wrong flag

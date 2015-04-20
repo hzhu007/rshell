@@ -174,3 +174,19 @@ hzhu007@hammer $ exit
 exit
 
 Script done on Sun 19 Apr 2015 05:58:37 PM PDT
+Script started on Sun 19 Apr 2015 11:28:45 PM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #test comment after a command
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls#ls
+bin  LICENSE  Makefile	README.md  src	tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls  #   ls
+bin  LICENSE  Makefile	README.md  src	tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sun 19 Apr 2015 11:29:33 PM PDT
