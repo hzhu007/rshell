@@ -16,6 +16,8 @@ static bool param_a = false;
 static bool param_l = false;
 static bool param_R = false;
 static bool param_none = true;
+static bool addr_input = false;
+
 
 void get_param(int argc, char** argv);
 void handle_ls();
@@ -50,8 +52,7 @@ void get_param(int argc, char** argv)
         }
         else
         {
-            cerr << "wrong parameter: " << argv[i] << endl;
-            exit(1);
+            addr_input = true;
         }
     }
     param_none = !(param_a|param_l|param_R);
@@ -60,6 +61,7 @@ void get_param(int argc, char** argv)
 void handle_ls()
 {
     DIR* dirp;
+
     if(NULL == (dirp = opendir("./")))
     {
         perror("opendir()");
