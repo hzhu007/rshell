@@ -116,17 +116,21 @@ void long_list_display(const char* addr, const vector<char*> &files)
     vector<char*> path;
     char* pathTemp;
     vector<char*> userName;
+    int max_uname = 0;
     vector<char*> groupName;
-    vector<int> mtime;
+    int max_grname = 0;
     struct passwd *ppwd;
     struct group *pgr;
+    vector<char*> mtime;
+    struct tm *ptm;
+    char* timeBuf;
     int max = 0;
     struct stat buf[files.size()];
+
     for(int i = 0; i < files.size(); ++i)
     {
         pathTemp = new char[1000];
-        if(strlen(files.at(i)) > max)
-            max = strlen(files.at(i));
+        max = std::max(max, (int)strlen(files.at(i)));
         strcpy(pathTemp, addr);
         strcat(pathTemp, files.at(i));
         path.push_back(pathTemp);
@@ -137,8 +141,14 @@ void long_list_display(const char* addr, const vector<char*> &files)
         }
         ppwd = getpwuid(buf[i].st_uid);
         userName.push_back(ppwd->pw_name);
+        max_uname = std::max(max_uname, (int)strlen(userName.at(i)));
         pgr = getgrgid(buf[i].st_gid);
         groupName.push_back(pgr->gr_name);
+        max_grname = std::max(max_grname, (int)strlen(groupName.at(i)));
+        timeBuf = new char[50];
+        ptm = localtime(&buf[i].st_mtime);
+        strftime(timeBuf, 50, "%b %d %H:%M", ptm);
+        mtime.push_back(timeBuf);
     }
     //for(int i = 0; i < files.size(); ++i)
     //{
@@ -157,8 +167,9 @@ void long_list_display(const char* addr, const vector<char*> &files)
              << ((buf[i].st_mode & S_IROTH)? "r":"-")
              << ((buf[i].st_mode & S_IWOTH)? "w":"-")
              << ((buf[i].st_mode & S_IXOTH)? "x":"-") << " ";
-        printf("%s ", userName.at(i));
-        printf("%s ", groupName.at(i));
-        cout << files.at(i) << endl;
+        printf("%*s ", max_uname, userName.at(i));
+        printf("%*s ", max_grname, groupName.at(i));
+        printf("%s ", mtime.at(i));
+        printf("%*s\n", max, files.at(i));
     }
 }
