@@ -115,6 +115,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
 {
     vector<char*> path;
     char* pathTemp;
+    int total = 0;
     vector<char*> linkNum;
     char* linkBuf;
     int max_link = 0;
@@ -145,6 +146,8 @@ void long_list_display(const char* addr, const vector<char*> &files)
             perror("stat()");
             exit(1);
         }
+        //cout << buf[i].st_blksize << endl;
+        total += buf[i].st_blocks;
         /* hard links */
         linkBuf = new char[5];
         sprintf(linkBuf, "%d", buf[i].st_nlink);
@@ -174,6 +177,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
     //    cout << files.at(i) << " ";
     //    cout << path.at(i) << endl;
     //}
+    cout << "Total " << total << endl;
     for(int i = 0; i < files.size(); ++i)
     {
         cout << ((S_ISDIR(buf[i].st_mode)) ? "d":"-")
