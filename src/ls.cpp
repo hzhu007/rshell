@@ -115,6 +115,9 @@ void long_list_display(const char* addr, const vector<char*> &files)
 {
     vector<char*> path;
     char* pathTemp;
+    vector<char*> linkNum;
+    char* linkBuf;
+    int max_link = 0;
     vector<char*> userName;
     int max_uname = 0;
     vector<char*> groupName;
@@ -142,20 +145,29 @@ void long_list_display(const char* addr, const vector<char*> &files)
             perror("stat()");
             exit(1);
         }
+        /* hard links */
+        linkBuf = new char[5];
+        sprintf(linkBuf, "%d", buf[i].st_nlink);
+        linkNum.push_back(linkBuf);
+        max_link = std::max(max_link, (int)strlen(linkNum.at(i)));
+        /* user name */
         ppwd = getpwuid(buf[i].st_uid);
         userName.push_back(ppwd->pw_name);
         max_uname = std::max(max_uname, (int)strlen(userName.at(i)));
+        /* group name */
         pgr = getgrgid(buf[i].st_gid);
         groupName.push_back(pgr->gr_name);
         max_grname = std::max(max_grname, (int)strlen(groupName.at(i)));
-        timeBuf = new char[50];
-        ptm = localtime(&buf[i].st_mtime);
-        strftime(timeBuf, 50, "%b %d %H:%M", ptm);
-        mtime.push_back(timeBuf);
+        /* size in bytes */
         sizeBuf = new char[100];
         sprintf(sizeBuf, "%d", buf[i].st_size);
         fsize.push_back(sizeBuf);
         max_size = std::max(max_size, (int)strlen(fsize.at(i)));
+        /* time of last modification */
+        timeBuf = new char[50];
+        ptm = localtime(&buf[i].st_mtime);
+        strftime(timeBuf, 50, "%b %d %H:%M", ptm);
+        mtime.push_back(timeBuf);
     }
     //for(int i = 0; i < files.size(); ++i)
     //{
@@ -174,6 +186,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
              << ((buf[i].st_mode & S_IROTH)? "r":"-")
              << ((buf[i].st_mode & S_IWOTH)? "w":"-")
              << ((buf[i].st_mode & S_IXOTH)? "x":"-") << " ";
+        printf("%*s ", max_link, linkNum.at(i));
         printf("%*s ", max_uname, userName.at(i));
         printf("%*s ", max_grname, groupName.at(i));
         printf("%*s ", max_size, fsize.at(i));
