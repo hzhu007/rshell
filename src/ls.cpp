@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <iostream>
 #include <stdio.h>
-#include <cstring>
+#include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <dirent.h>
 #include <string>
 #include <vector>
@@ -23,11 +25,20 @@ static bool addr_input = false;
 
 
 void get_param(int argc, char** argv);
+void long_list_display(char* addr, char* fileName);
 void handle_ls(char* addr);
 int main(int argc, char** argv)
 {
     get_param(argc, argv);
-    handle_ls("./");
+    char addr[1000];
+    if(addr_input)
+        strcpy(addr, "./");
+    else
+        strcpy(addr, "../src");
+    if(addr[strlen(addr-1)] != '/')  //ensure address ends with '/'
+        strcat(addr, "/");           //to visit certain file with filename
+    cout << addr << endl;
+    handle_ls(addr);
     return 0;
 }
 
@@ -89,8 +100,30 @@ void handle_ls(char* addr)
     sort(files.begin(), files.end());
     for(int i = 0; i < files.size(); ++i)
     {
-        if(!(files.at(i)[0]=='.' && !param_a))
-            cout << files.at(i) << "  ";
+        if(!(files.at(i)[0]=='.' && !param_a))  //if is hidden and not -a, don't print
+            if(param_l)
+                long_list_display(addr, files.at(i));
+            else
+                cout << files.at(i) << "  ";
     }
-    cout << endl;
+}
+
+void long_list_display(char* addr, char* fileName)
+{
+    char path[10000];
+    strcpy(path, addr);
+    strcat(path, fileName);
+    struct stat buf;
+    stat(path, &buf);
+    cout << ((S_ISDIR(buf.st_mode)) ? "d":"-")
+         << ((buf.st_mode & S_IRUSR)? "r":"-")
+         << ((buf.st_mode & S_IWUSR)? "w":"-")
+         << ((buf.st_mode & S_IXUSR)? "x":"-")
+         << ((buf.st_mode & S_IRGRP)? "r":"-")
+         << ((buf.st_mode & S_IWGRP)? "w":"-")
+         << ((buf.st_mode & S_IXGRP)? "x":"-")
+         << ((buf.st_mode & S_IROTH)? "r":"-")
+         << ((buf.st_mode & S_IWOTH)? "w":"-")
+         << ((buf.st_mode & S_IXOTH)? "x":"-");
+    cout << fileName << endl;
 }
