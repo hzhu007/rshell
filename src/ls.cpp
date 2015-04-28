@@ -4,6 +4,9 @@
 #include <cstring>
 #include <sys/types.h>
 #include <dirent.h>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -20,11 +23,11 @@ static bool addr_input = false;
 
 
 void get_param(int argc, char** argv);
-void handle_ls();
+void handle_ls(char* addr);
 int main(int argc, char** argv)
 {
     get_param(argc, argv);
-    handle_ls();
+    handle_ls("./");
     return 0;
 }
 
@@ -58,11 +61,11 @@ void get_param(int argc, char** argv)
     param_none = !(param_a|param_l|param_R);
 }
 
-void handle_ls()
+void handle_ls(char* addr)
 {
     DIR* dirp;
-
-    if(NULL == (dirp = opendir("./")))
+    vector<char*> files;
+    if(NULL == (dirp = opendir(addr)))
     {
         perror("opendir()");
         exit(1);
@@ -71,17 +74,23 @@ void handle_ls()
     int errno = 0;
     while(NULL != (filespecs = readdir(dirp)))
     {
-        cout << filespecs->d_name << "  ";
+        files.push_back(filespecs->d_name);
     }
     if(errno != 0)
     {
         perror("readdir()");
         exit(1);
     }
-    cout << endl;
     if(-1 == closedir(dirp))
     {
         perror("closedir()");
         exit(1);
     }
+    sort(files.begin(), files.end());
+    for(int i = 0; i < files.size(); ++i)
+    {
+        if(!(files.at(i)[0]=='.' && !param_a))
+            cout << files.at(i) << "  ";
+    }
+    cout << endl;
 }
