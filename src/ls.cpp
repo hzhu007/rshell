@@ -25,7 +25,7 @@ static bool param_R = false;
 static bool param_none = true;
 static bool addr_input = false;
 
-
+bool sortFunc(char* s1, char* s2){return strcmp(s1, s2) < 0;};
 void get_param(int argc, char** argv);
 void long_list_display(const char* addr, const vector<char*> &files);
 void handle_ls(const char* addr);
@@ -100,7 +100,7 @@ void handle_ls(const char* addr)
         perror("closedir()");
         exit(1);
     }
-    sort(files.begin(), files.end());
+    sort(files.begin(), files.end(), sortFunc);
     if(param_l)
         long_list_display(addr, files);
     else
@@ -124,6 +124,9 @@ void long_list_display(const char* addr, const vector<char*> &files)
     vector<char*> mtime;
     struct tm *ptm;
     char* timeBuf;
+    vector<char*> fsize;
+    char* sizeBuf;
+    int max_size = 0;
     int max = 0;
     struct stat buf[files.size()];
 
@@ -149,6 +152,10 @@ void long_list_display(const char* addr, const vector<char*> &files)
         ptm = localtime(&buf[i].st_mtime);
         strftime(timeBuf, 50, "%b %d %H:%M", ptm);
         mtime.push_back(timeBuf);
+        sizeBuf = new char[100];
+        sprintf(sizeBuf, "%d", buf[i].st_size);
+        fsize.push_back(sizeBuf);
+        max_size = std::max(max_size, (int)strlen(fsize.at(i)));
     }
     //for(int i = 0; i < files.size(); ++i)
     //{
@@ -169,7 +176,8 @@ void long_list_display(const char* addr, const vector<char*> &files)
              << ((buf[i].st_mode & S_IXOTH)? "x":"-") << " ";
         printf("%*s ", max_uname, userName.at(i));
         printf("%*s ", max_grname, groupName.at(i));
+        printf("%*s ", max_size, fsize.at(i));
         printf("%s ", mtime.at(i));
-        printf("%*s\n", max, files.at(i));
+        printf("%s\n", files.at(i));
     }
 }
