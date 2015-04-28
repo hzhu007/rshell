@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <grp.h>
+#include <pwd.h>
 
 using namespace std;
 
@@ -112,29 +114,51 @@ void handle_ls(const char* addr)
 void long_list_display(const char* addr, const vector<char*> &files)
 {
     vector<char*> path;
-    char pathTemp[1000];
+    char* pathTemp;
+    vector<char*> userName;
+    vector<char*> groupName;
+    vector<int> mtime;
+    struct passwd *ppwd;
+    struct group *pgr;
+    int max = 0;
+    struct stat buf[files.size()];
     for(int i = 0; i < files.size(); ++i)
     {
+        pathTemp = new char[1000];
+        if(strlen(files.at(i)) > max)
+            max = strlen(files.at(i));
         strcpy(pathTemp, addr);
         strcat(pathTemp, files.at(i));
         path.push_back(pathTemp);
-        cout << files.at(i) << " " << path.at(i) << endl;
+        if(-1 == stat(path.at(i), &buf[i]))
+        {
+            perror("stat()");
+            exit(1);
+        }
+        ppwd = getpwuid(buf[i].st_uid);
+        userName.push_back(ppwd->pw_name);
+        pgr = getgrgid(buf[i].st_gid);
+        groupName.push_back(pgr->gr_name);
     }
-    struct stat buf;
+    //for(int i = 0; i < files.size(); ++i)
+    //{
+    //    cout << files.at(i) << " ";
+    //    cout << path.at(i) << endl;
+    //}
     for(int i = 0; i < files.size(); ++i)
     {
-        stat(path.at(i), &buf);
-        cout << ((S_ISDIR(buf.st_mode)) ? "d":"-")
-             << ((buf.st_mode & S_IRUSR)? "r":"-")
-             << ((buf.st_mode & S_IWUSR)? "w":"-")
-             << ((buf.st_mode & S_IXUSR)? "x":"-")
-             << ((buf.st_mode & S_IRGRP)? "r":"-")
-             << ((buf.st_mode & S_IWGRP)? "w":"-")
-             << ((buf.st_mode & S_IXGRP)? "x":"-")
-             << ((buf.st_mode & S_IROTH)? "r":"-")
-             << ((buf.st_mode & S_IWOTH)? "w":"-")
-             << ((buf.st_mode & S_IXOTH)? "x":"-") << " ";
-
+        cout << ((S_ISDIR(buf[i].st_mode)) ? "d":"-")
+             << ((buf[i].st_mode & S_IRUSR)? "r":"-")
+             << ((buf[i].st_mode & S_IWUSR)? "w":"-")
+             << ((buf[i].st_mode & S_IXUSR)? "x":"-")
+             << ((buf[i].st_mode & S_IRGRP)? "r":"-")
+             << ((buf[i].st_mode & S_IWGRP)? "w":"-")
+             << ((buf[i].st_mode & S_IXGRP)? "x":"-")
+             << ((buf[i].st_mode & S_IROTH)? "r":"-")
+             << ((buf[i].st_mode & S_IWOTH)? "w":"-")
+             << ((buf[i].st_mode & S_IXOTH)? "x":"-") << " ";
+        printf("%s ", userName.at(i));
+        printf("%s ", groupName.at(i));
         cout << files.at(i) << endl;
     }
 }
