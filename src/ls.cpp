@@ -11,13 +11,9 @@
 #include <algorithm>
 #include <grp.h>
 #include <pwd.h>
+#include <errno.h>
 
 using namespace std;
-
-//#define PARAM_NONE  0
-//#define PARAM_A     1
-//#define PARAM_L     2
-//#define PARAM_R     3
 
 static bool param_a = false;
 static bool param_l = false;
@@ -26,30 +22,28 @@ static bool param_none = true;
 static bool addr_input = false;
 
 bool sortFunc(char* s1, char* s2){return strcmp(s1, s2) < 0;};
-void get_param(int argc, char** argv);
+void get_param(int argc, char** argv, vector<char*> &v_addr);
 void long_list_display(const char* addr, const vector<char*> &files);
 void handle_ls(const char* addr);
 int main(int argc, char** argv)
 {
-    get_param(argc, argv);
-    char addr[1000];
-    if(addr_input)
-        strcpy(addr, "./");
-    else
-        strcpy(addr, "./");
-    if(addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
-        strcat(addr, "/");           //to visit certain file with filename
-    cout << addr << endl;
-    handle_ls(addr);
+    vector<char*> v_addr;
+    get_param(argc, argv, v_addr);
+    for(int i = 0; i < v_addr.size(); ++i)
+    {
+        cout << v_addr.at(i) << endl;
+        handle_ls(v_addr.at(i));
+    }
     return 0;
 }
 
-void get_param(int argc, char** argv)
+void get_param(int argc, char** argv, vector<char*> &v_addr)
 {
+    char* addr;
     for(int i = 1; i < argc; ++i)
     {
         if(argv[i][0] == '-')
-        {
+        {//handle as a flag
             for(int j = 1; j < strlen(argv[i]); ++j)
             {
                 if(argv[i][j] == 'a')
@@ -67,9 +61,20 @@ void get_param(int argc, char** argv)
             }
         }
         else
-        {
+        {//handle as an address
             addr_input = true;
+            addr = new char[strlen(argv[i])+2];
+            strcpy(addr, argv[i]);
+            if(addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
+                strcat(addr, "/");           //to visit certain file with filename
+            v_addr.push_back(addr);
         }
+    }
+    if(!addr_input)
+    {
+        addr = new char[3];
+        strcpy(addr, "./");
+        v_addr.push_back(addr);
     }
     param_none = !(param_a|param_l|param_R);
 }
@@ -81,10 +86,10 @@ void handle_ls(const char* addr)
     if(NULL == (dirp = opendir(addr)))
     {
         perror("opendir()");
-        exit(1);
+        return;
     }
     struct dirent* filespecs;
-    int errno = 0;
+    errno = 0;
     while(NULL != (filespecs = readdir(dirp)))
     {
         if(!(filespecs->d_name[0]=='.' && !param_a))  //if is hidden and not -a, don't print
@@ -146,7 +151,6 @@ void long_list_display(const char* addr, const vector<char*> &files)
             perror("stat()");
             exit(1);
         }
-        //cout << buf[i].st_blksize << endl;
         total += buf[i].st_blocks;
         /* hard links */
         linkBuf = new char[5];
@@ -154,11 +158,23 @@ void long_list_display(const char* addr, const vector<char*> &files)
         linkNum.push_back(linkBuf);
         max_link = std::max(max_link, (int)strlen(linkNum.at(i)));
         /* user name */
+        errno = 0;
         ppwd = getpwuid(buf[i].st_uid);
+        if(errno != 0)
+        {
+            perror("getpwuid()");
+            exit(1);
+        }
         userName.push_back(ppwd->pw_name);
         max_uname = std::max(max_uname, (int)strlen(userName.at(i)));
         /* group name */
+        errno = 0;
         pgr = getgrgid(buf[i].st_gid);
+        if(errno != 0)
+        {
+            perror("getgrgid()");
+            exit(1);
+        }
         groupName.push_back(pgr->gr_name);
         max_grname = std::max(max_grname, (int)strlen(groupName.at(i)));
         /* size in bytes */
@@ -177,7 +193,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
     //    cout << files.at(i) << " ";
     //    cout << path.at(i) << endl;
     //}
-    cout << "Total " << total << endl;
+    cout << "total " << total/2 << endl;
     for(int i = 0; i < files.size(); ++i)
     {
         cout << ((S_ISDIR(buf[i].st_mode)) ? "d":"-")
