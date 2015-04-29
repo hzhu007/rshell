@@ -21,17 +21,40 @@ static bool param_R = false;
 static bool param_none = true;
 static bool addr_input = false;
 
-bool sortFunc(char* s1, char* s2){return strcmp(s1, s2) < 0;};
+bool sortFunc(char* s1, char* s2)
+{
+    char str1[256];
+    char str2[256];
+    strcpy(str1, s1);
+    strcpy(str2, s2);
+    int i = 0;
+    while(str1[i])
+    {
+        str1[i] = tolower(str1[i]);
+        i++;
+    }
+    i = 0;
+    while(str2[i])
+    {
+        str2[i] = tolower(str2[i]);
+        i++;
+    }
+    return strcmp(str1, str2) < 0;
+}
 void get_param(int argc, char** argv, vector<char*> &v_addr);
-void long_list_display(const char* addr, const vector<char*> &files);
 void handle_ls(const char* addr);
+void long_list_display(const char* addr, const vector<char*> &files);
+void norm_display(const vector<char*> &files);
 int main(int argc, char** argv)
 {
     vector<char*> v_addr;
     get_param(argc, argv, v_addr);
     for(int i = 0; i < v_addr.size(); ++i)
     {
-        cout << v_addr.at(i) << endl;
+        if(i > 0)
+            cout << endl;
+        if(v_addr.size() > 1)
+            cout << v_addr.at(i) << ":" << endl;
         handle_ls(v_addr.at(i));
     }
     return 0;
@@ -83,6 +106,7 @@ void handle_ls(const char* addr)
 {
     DIR* dirp;
     vector<char*> files;
+    char* filesBuf;
     if(NULL == (dirp = opendir(addr)))
     {
         perror("opendir()");
@@ -93,7 +117,11 @@ void handle_ls(const char* addr)
     while(NULL != (filespecs = readdir(dirp)))
     {
         if(!(filespecs->d_name[0]=='.' && !param_a))  //if is hidden and not -a, don't print
-            files.push_back(filespecs->d_name);
+        {
+            filesBuf = new char[strlen(filespecs->d_name)+1];
+            strcpy(filesBuf, filespecs->d_name);
+            files.push_back(filesBuf);
+        }
     }
     if(errno != 0)
     {
@@ -106,18 +134,25 @@ void handle_ls(const char* addr)
         exit(1);
     }
     sort(files.begin(), files.end(), sortFunc);
+    //for (int i = 0; i < files.size(); ++i)
+    //{
+    //    cout << files.at(i) << endl;
+    //}
     if(param_l)
         long_list_display(addr, files);
     else
-    {
-        for(int i = 0; i < files.size(); ++i)
-            cout << files.at(i) << "  ";
-        cout << endl;
-    }
+        norm_display(files);
+    for(int i = 0; i < files.size(); ++i)
+        delete[] files.at(i);
+    return;
 }
 
 void long_list_display(const char* addr, const vector<char*> &files)
 {
+    //for (int i = 0; i < files.size(); ++i)
+    //{
+    //    cout << files.at(i) << endl;
+    //}
     vector<char*> path;
     char* pathTemp;
     int total = 0;
@@ -146,6 +181,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
         strcpy(pathTemp, addr);
         strcat(pathTemp, files.at(i));
         path.push_back(pathTemp);
+        //cout << pathTemp << endl;
         if(-1 == stat(path.at(i), &buf[i]))
         {
             perror("stat()");
@@ -187,6 +223,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
         ptm = localtime(&buf[i].st_mtime);
         strftime(timeBuf, 50, "%b %d %H:%M", ptm);
         mtime.push_back(timeBuf);
+        delete[] pathTemp;
     }
     //for(int i = 0; i < files.size(); ++i)
     //{
@@ -207,10 +244,22 @@ void long_list_display(const char* addr, const vector<char*> &files)
              << ((buf[i].st_mode & S_IWOTH)? "w":"-")
              << ((buf[i].st_mode & S_IXOTH)? "x":"-") << " ";
         printf("%*s ", max_link, linkNum.at(i));
+        delete[] linkNum.at(i);
         printf("%*s ", max_uname, userName.at(i));
         printf("%*s ", max_grname, groupName.at(i));
         printf("%*s ", max_size, fsize.at(i));
+        delete[] fsize.at(i);
         printf("%s ", mtime.at(i));
+        delete[] mtime.at(i);
         printf("%s\n", files.at(i));
     }
+    return;
+}
+
+void norm_display(const vector<char*> &files)
+{
+    for(int i = 0; i < files.size(); ++i)
+        cout << files.at(i) << "  ";
+    cout << endl;
+    return;
 }
