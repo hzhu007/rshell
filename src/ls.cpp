@@ -94,7 +94,7 @@ void get_param(int argc, char** argv, vector<char*> &v_addr)
         }
     }
     if(!addr_input)
-    {
+    {//use current directory as default if no address input
         addr = new char[3];
         strcpy(addr, "./");
         v_addr.push_back(addr);
