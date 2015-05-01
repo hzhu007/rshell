@@ -1,5 +1,6 @@
 #Rshell
 ##Introduction
+###rhell
 This program is a command shell called *rshell*. Rshell uses syscalls ```fork()```, ```waitpid()``` and ```execvp()``` to execute commands from user input. It can perform the following steps:
 
 1. Print a command prompt `[rshell]username@hostname $ `
@@ -15,6 +16,9 @@ where executable is an executable program in the PATH and argumentList is a list
 Anything between two connectors(including the beginning and the end of an input line) would be considered as an executable command and be passed into ```execvp()```. For example, ```;;```would be considered as three empty commands. And ```&&&```would be considered as an empty command and ```&```, which is a wrong command, connected by ```&&```. Notice this is **different** from original bash.
 
 Anything that appears after a ```#``` character will be considered as comment.
+###ls
+I also implement my own ```ls``` which is a subset of the GNU ```ls``` command.
+In my ```ls```, only ```-a```(show hidden), ```-l```(long list format) and ```-R```(recursively) optional flags are supported and it has the ability deal with zero, one, or many files. Files and folders will be handled differently, the same as original GNU ```ls``` command.
 
 ## Prerequisites
 OS: Linux
@@ -22,13 +26,13 @@ OS: Linux
 g++ compiler
 
 ## Installation
-###rshell
+####rshell
     git clone https://github.com/hzhu007/rshell.git
     cd rshell
     git checkout hw0
     make
     bin/rshell
-###ls
+####ls
     git clone https://github.com/hzhu007/rshell.git
     cd rshell
     git checkout hw1
