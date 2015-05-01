@@ -56,7 +56,7 @@ void handle_files(const vector<char*> &v_files);
 void handle_addr(const char* addr);
 void long_list_display(const char* addr, const vector<char*> &files);
 void norm_display(const char* addr, const vector<char*> &files);
-void format(int &row, int &col, const vector<char*> &files, int* maxLen);
+void format(unsigned &row, unsigned &col, const vector<char*> &files, int* maxLen);
 
 int main(int argc, char** argv)
 {
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     {
         handle_files(v_files);
     }
-    for(int i = 0; i < v_addr.size(); ++i)
+    for(unsigned i = 0; i < v_addr.size(); ++i)
         handle_addr(v_addr.at(i));
     return 0;
 }
@@ -92,7 +92,7 @@ void get_param(int argc, char** argv, vector<char*> &v_addr, vector<char*> &v_fi
     {
         if(argv[i][0] == '-')
         {//handle as a flag
-            for(int j = 1; j < strlen(argv[i]); ++j)
+            for(unsigned j = 1; j < strlen(argv[i]); ++j)
             {
                 if(argv[i][j] == 'a')
                     param_a = true;
@@ -200,7 +200,7 @@ void handle_addr(const char* addr)
     {
         struct stat buf[files.size()];
         char path[1000];
-        for (int i = 0; i < files.size(); ++i)
+        for (unsigned i = 0; i < files.size(); ++i)
         {
             if(strcmp(files.at(i), ".") == 0 ||
                strcmp(files.at(i), "..") == 0)
@@ -224,7 +224,7 @@ void handle_addr(const char* addr)
             //cout << files.at(i) << endl;
         }
     }
-    for(int i = 0; i < files.size(); ++i)
+    for(unsigned i = 0; i < files.size(); ++i)
         delete[] files.at(i);
     return;
 }
@@ -255,7 +255,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
     int max_size = 0;
     struct stat buf[files.size()];
 
-    for(int i = 0; i < files.size(); ++i)
+    for(unsigned i = 0; i < files.size(); ++i)
     {
         pathTemp = new char[1000];
         strcpy(pathTemp, addr);
@@ -273,7 +273,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
         total += buf[i].st_blocks;
         /* hard links */
         linkBuf = new char[5];
-        sprintf(linkBuf, "%d", buf[i].st_nlink);
+        sprintf(linkBuf, "%lu", buf[i].st_nlink);
         linkNum.push_back(linkBuf);
         max_link = max(max_link, (int)strlen(linkNum.at(i)));
         /* user name */
@@ -298,7 +298,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
         max_grname = max(max_grname, (int)strlen(groupName.at(i)));
         /* size in bytes */
         sizeBuf = new char[100];
-        sprintf(sizeBuf, "%d", buf[i].st_size);
+        sprintf(sizeBuf, "%lu", buf[i].st_size);
         fsize.push_back(sizeBuf);
         max_size = max(max_size, (int)strlen(fsize.at(i)));
         /* time of last modification */
@@ -314,7 +314,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
     //    cout << path.at(i) << endl;
     //}
     cout << "total " << total/2 << endl;
-    for(int i = 0; i < files.size(); ++i)
+    for(unsigned i = 0; i < files.size(); ++i)
     {
         cout << ((S_ISDIR(buf[i].st_mode)) ? "d":"-")
              << ((buf[i].st_mode & S_IRUSR)? "r":"-")
@@ -351,7 +351,7 @@ void norm_display(const char* addr, const vector<char*> &files)
 {
     struct stat buf[files.size()];
     char* path;
-    int col, row;  //row number and column number
+    unsigned int col, row;  //row number and column number
     int* col_len;  //width of each column
     col_len = new int[30];
     format(row, col, files, col_len);
@@ -359,7 +359,7 @@ void norm_display(const char* addr, const vector<char*> &files)
     //for(int i = 0; i < 3; ++i)
     //    cout << col_len[i] << " ";
     //exit(0);
-    for(int i = 0; i < files.size(); ++i)
+    for(unsigned i = 0; i < files.size(); ++i)
     {
         path = new char[1000];
         strcpy(path, addr);
@@ -376,7 +376,7 @@ void norm_display(const char* addr, const vector<char*> &files)
         delete[] path;
         path = NULL;
     }
-    for(int r = 0; r < row; ++r)
+    for(unsigned r = 0; r < row; ++r)
     {
         if(files.at(r)[0] == '.')
             GRAY;
@@ -387,7 +387,7 @@ void norm_display(const char* addr, const vector<char*> &files)
         printf("%-*s", col_len[0], files.at(r));
         RESET;
         //exit(0);
-        for(int c = 1; c < col && c*row+r < files.size(); ++c)
+        for(unsigned c = 1; c < col && c*row+r < files.size(); ++c)
         {
             printf("  ");
             if(files.at(c*row+r)[0] == '.')
@@ -406,7 +406,7 @@ void norm_display(const char* addr, const vector<char*> &files)
     return;
 }
 
-void format(int &row, int &col, const vector<char*> &files, int* maxLen)
+void format(unsigned &row, unsigned &col, const vector<char*> &files, int* maxLen)
 {//get the row number, column number and column width
     //max length of a column
     int row_len;  //length of a row
@@ -419,9 +419,9 @@ void format(int &row, int &col, const vector<char*> &files, int* maxLen)
             maxLen[i] = 0;
         }
         col = ceil(files.size() / (double)row);
-        for(int c = 0; c < col; ++c)
+        for(unsigned c = 0; c < col; ++c)
         {//colomn
-            for(int r = 0; c*row+r < files.size() && r < row; ++r)
+            for(unsigned r = 0; c*row+r < files.size() && r < row; ++r)
             {//row
                 maxLen[c] = max(maxLen[c], (int)strlen(files.at(c*row+r)));
             }
