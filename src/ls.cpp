@@ -17,6 +17,11 @@
 
 using namespace std;
 
+#define BLUE printf("\x1b[34;1m")
+#define GREEN printf("\x1b[32;1m")
+#define GRAY printf("\x1b[48;5;243m")
+#define RESET printf("\x1b[0m")
+
 static int max_col;                //terminal width
 static bool param_a = false;       //-a show hidden
 static bool param_l = false;       //-l long list
@@ -50,13 +55,17 @@ void get_param(int argc, char** argv, vector<char*> &v_addr, vector<char*> &v_fi
 void handle_files(const vector<char*> &v_files);
 void handle_addr(const char* addr);
 void long_list_display(const char* addr, const vector<char*> &files);
-void norm_display(const vector<char*> &files);
+void norm_display(const char* addr, const vector<char*> &files);
 void format(int &row, int &col, const vector<char*> &files, int* maxLen);
 
 int main(int argc, char** argv)
 {
     struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);   //get column of terminal
+    if(-1 == ioctl(STDOUT_FILENO, TIOCGWINSZ, &w))   //get column of terminal
+    {
+        perror("ioctl()");
+        exit(1);
+    }
     //max_col = min((int)w.ws_col, 80);
     max_col = w.ws_col;
     //printf ("lines %d\n", w.ws_row);
@@ -105,6 +114,7 @@ void get_param(int argc, char** argv, vector<char*> &v_addr, vector<char*> &v_fi
             {
                 perror("stat()");
                 cerr << argv[i] << " not found" << endl;
+                addr_input = true;
                 continue;
             }
             addr = new char[strlen(argv[i])+1];
@@ -137,7 +147,7 @@ void handle_files(const vector<char*> &v_files)
     if(param_l)
         long_list_display("", v_files);
     else
-        norm_display(v_files);
+        norm_display("", v_files);
     newLine = true;
     addr_display = true;
     return;
@@ -184,7 +194,7 @@ void handle_addr(const char* addr)
     if(param_l)
         long_list_display(addr, files);
     else
-        norm_display(files);
+        norm_display(addr, files);
     newLine = true;
     if(param_R)
     {
@@ -324,29 +334,70 @@ void long_list_display(const char* addr, const vector<char*> &files)
         delete[] fsize.at(i);
         printf("%s ", mtime.at(i));
         delete[] mtime.at(i);
-        printf("%s\n", files.at(i));
+        if(files.at(i)[0] == '.')
+            GRAY;
+        if(buf[i].st_mode & S_IXUSR)
+            GREEN;
+        if(S_ISDIR(buf[i].st_mode))
+            BLUE;
+        printf("%s", files.at(i));
+        RESET;
+        printf("\n");
     }
     return;
 }
 
-void norm_display(const vector<char*> &files)
+void norm_display(const char* addr, const vector<char*> &files)
 {
+    struct stat buf[files.size()];
+    char* path;
     int col, row;  //row number and column number
-    int* col_len;  //length of each column
+    int* col_len;  //width of each column
     col_len = new int[30];
     format(row, col, files, col_len);
     //cout << row << " " << col << endl;
     //for(int i = 0; i < 3; ++i)
     //    cout << col_len[i] << " ";
     //exit(0);
+    for(int i = 0; i < files.size(); ++i)
+    {
+        path = new char[1000];
+        strcpy(path, addr);
+        if(strlen(addr) != 0 &&           //if addr is a directory,
+            addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
+            strcat(path, "/");            //to visit certain file with filename
+        strcat(path, files.at(i));
+        if(-1 == stat(path, &buf[i]))
+        {
+            perror("stat()");
+            cerr << path << " not found" << endl;
+            continue;
+        }
+        delete[] path;
+        path = NULL;
+    }
     for(int r = 0; r < row; ++r)
     {
+        if(files.at(r)[0] == '.')
+            GRAY;
+        if(buf[r].st_mode & S_IXUSR)
+            GREEN;
+        if(S_ISDIR(buf[r].st_mode))
+            BLUE;
         printf("%-*s", col_len[0], files.at(r));
+        RESET;
         //exit(0);
         for(int c = 1; c < col && c*row+r < files.size(); ++c)
         {
             printf("  ");
+            if(files.at(c*row+r)[0] == '.')
+                GRAY;
+            if(buf[c*row+r].st_mode & S_IXUSR)
+                GREEN;
+            if(S_ISDIR(buf[c*row+r].st_mode))
+                BLUE;
             printf("%-*s", col_len[c], files.at(c*row+r));
+            RESET;
         }
         printf("\n");
     }
@@ -356,7 +407,7 @@ void norm_display(const vector<char*> &files)
 }
 
 void format(int &row, int &col, const vector<char*> &files, int* maxLen)
-{
+{//get the row number, column number and column width
     //max length of a column
     int row_len;  //length of a row
     row = 1;
