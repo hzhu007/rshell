@@ -18,8 +18,10 @@ Anything between two connectors(including the beginning and the end of an input 
 Anything that appears after a ```#``` character will be considered as comment.
 ###ls
 I also implement my own ```ls``` which is a subset of the GNU ```ls``` command.
+
 In my ```ls```, only ```-a```(show hidden), ```-l```(long list format) and ```-R```(recursively) optional flags are supported and it has the ability deal with zero, one, or many files. Files and folders will be handled differently, the same as original GNU ```ls``` command.
-Also it will display different types of files in different colors. To be more specific, it print directories in blue, executables in green, and hidden files (with the -a flag only) with a gray background. These effects should be combinable. So if you have a hidden directory, it should be displayed as blue text on top of a gray background.
+
+Also it will display different types of files in different colors. To be more specific, it print directories in blue, executables in green, and hidden files (with the ```-a``` flag only) with a gray background. These effects should be combinable. So if you have a hidden directory, it should be displayed as blue text on top of a gray background.
 
 ## Prerequisites
 OS: Linux
