@@ -22,11 +22,18 @@ OS: Linux
 g++ compiler
 
 ## Installation
+###rshell
     git clone https://github.com/hzhu007/rshell.git
     cd rshell
     git checkout hw0
     make
     bin/rshell
+###ls
+    git clone https://github.com/hzhu007/rshell.git
+    cd rshell
+    git checkout hw1
+    make
+    bin/ls
 
 ##Test cases
     # test comment
