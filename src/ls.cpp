@@ -17,13 +17,14 @@
 
 using namespace std;
 
-static int max_col;
-static bool param_a = false;
-static bool param_l = false;
-static bool param_R = false;
-static bool newLine = false;
-static bool addr_input = false;
-static bool addr_display = false;
+static int max_col;                //terminal width
+static bool param_a = false;       //-a show hidden
+static bool param_l = false;       //-l long list
+static bool param_R = false;       //-R recursion
+static bool newLine = false;       //output a new line every time after file display
+static bool addr_input = false;    //whether input address
+static bool file_input = false;    //whether input file
+static bool addr_display = false;  //show directory
 
 bool sortFunc(char* s1, char* s2)
 {
@@ -45,8 +46,9 @@ bool sortFunc(char* s1, char* s2)
     }
     return strcmp(str1, str2) < 0;
 }
-void get_param(int argc, char** argv, vector<char*> &v_addr);
-void handle_ls(const char* addr);
+void get_param(int argc, char** argv, vector<char*> &v_addr, vector<char*> &v_files);
+void handle_files(const vector<char*> &v_files);
+void handle_addr(const char* addr);
 void long_list_display(const char* addr, const vector<char*> &files);
 void norm_display(const vector<char*> &files);
 void format(int &row, int &col, const vector<char*> &files, int* maxLen);
@@ -54,21 +56,29 @@ void format(int &row, int &col, const vector<char*> &files, int* maxLen);
 int main(int argc, char** argv)
 {
     struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);   //get column of terminal
     //max_col = min((int)w.ws_col, 80);
     max_col = w.ws_col;
     //printf ("lines %d\n", w.ws_row);
     //printf ("columns %d\n", w.ws_col);
-    vector<char*> v_addr;
-    get_param(argc, argv, v_addr);
+    vector<char*> v_addr;  //vector storing input file address
+    vector<char*> v_files;
+    get_param(argc, argv, v_addr, v_files);
+    //long_list_display("", v_addr);
+    //exit(0);
+    if(file_input)
+    {
+        handle_files(v_files);
+    }
     for(int i = 0; i < v_addr.size(); ++i)
-        handle_ls(v_addr.at(i));
+        handle_addr(v_addr.at(i));
     return 0;
 }
 
-void get_param(int argc, char** argv, vector<char*> &v_addr)
+void get_param(int argc, char** argv, vector<char*> &v_addr, vector<char*> &v_files)
 {
     char* addr;
+    struct stat buf;
     for(int i = 1; i < argc; ++i)
     {
         if(argv[i][0] == '-')
@@ -90,27 +100,50 @@ void get_param(int argc, char** argv, vector<char*> &v_addr)
             }
         }
         else
-        {//handle as an address
-            addr_input = true;
-            addr = new char[strlen(argv[i])+2];
+        {
+            if(-1 == stat(argv[i], &buf))
+            {
+                perror("stat()");
+                cerr << argv[i] << " not found" << endl;
+                continue;
+            }
+            addr = new char[strlen(argv[i])+1];
             strcpy(addr, argv[i]);
-            if(addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
-                strcat(addr, "/");           //to visit certain file with filename
-            v_addr.push_back(addr);
+            if(S_ISDIR(buf.st_mode))
+            {
+                addr_input = true;
+                v_addr.push_back(addr);
+            }
+            else if(S_ISREG(buf.st_mode))
+            {
+                file_input = true;
+                v_files.push_back(addr);
+            }
         }
     }
-    if(!addr_input)
-    {//use current directory as default if no address input
-        addr = new char[3];
-        strcpy(addr, "./");
+    if(!(addr_input|file_input))
+    {//use current directory as default if no address or file input
+        addr = new char[2];
+        strcpy(addr, ".");
         v_addr.push_back(addr);
     }
-    if(v_addr.size() > 1 || param_R)
-        addr_display = true;
+    if(v_addr.size() > 1 || param_R)    //if -R or multiple address
+        addr_display = true;            //display the directory
     return;
 }
 
-void handle_ls(const char* addr)
+void handle_files(const vector<char*> &v_files)
+{
+    if(param_l)
+        long_list_display("", v_files);
+    else
+        norm_display(v_files);
+    newLine = true;
+    addr_display = true;
+    return;
+}
+
+void handle_addr(const char* addr)
 {
     DIR* dirp;
     vector<char*> files;
@@ -163,6 +196,8 @@ void handle_ls(const char* addr)
                strcmp(files.at(i), "..") == 0)
                continue;
             strcpy(path, addr);
+            if(addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
+                strcat(path, "/");           //to visit certain file with filename
             strcat(path, files.at(i));
             //cout << path << endl;
             if(-1 == stat(path, &buf[i]))
@@ -173,7 +208,7 @@ void handle_ls(const char* addr)
             if(S_ISDIR(buf[i].st_mode))
             {
                 //strcat(path, "/");
-                handle_ls(path);
+                handle_addr(path);
                 //cout << path << endl;
             }
             //cout << files.at(i) << endl;
@@ -214,6 +249,9 @@ void long_list_display(const char* addr, const vector<char*> &files)
     {
         pathTemp = new char[1000];
         strcpy(pathTemp, addr);
+        if(strlen(addr) != 0 &&           //if addr is a directory,
+            addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
+            strcat(pathTemp, "/");        //to visit certain file with filename
         strcat(pathTemp, files.at(i));
         path.push_back(pathTemp);
         //cout << pathTemp << endl;
