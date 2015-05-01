@@ -12,14 +12,18 @@
 #include <grp.h>
 #include <pwd.h>
 #include <errno.h>
+#include <sys/ioctl.h>
+#include <cmath>
 
 using namespace std;
 
+static int max_col;
 static bool param_a = false;
 static bool param_l = false;
 static bool param_R = false;
-static bool param_none = true;
+static bool newLine = false;
 static bool addr_input = false;
+static bool addr_display = false;
 
 bool sortFunc(char* s1, char* s2)
 {
@@ -45,18 +49,20 @@ void get_param(int argc, char** argv, vector<char*> &v_addr);
 void handle_ls(const char* addr);
 void long_list_display(const char* addr, const vector<char*> &files);
 void norm_display(const vector<char*> &files);
+void format(int &row, int &col, const vector<char*> &files, int* maxLen);
+
 int main(int argc, char** argv)
 {
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    //max_col = min((int)w.ws_col, 80);
+    max_col = w.ws_col;
+    //printf ("lines %d\n", w.ws_row);
+    //printf ("columns %d\n", w.ws_col);
     vector<char*> v_addr;
     get_param(argc, argv, v_addr);
     for(int i = 0; i < v_addr.size(); ++i)
-    {
-        if(i > 0)
-            cout << endl;
-        if(v_addr.size() > 1)
-            cout << v_addr.at(i) << ":" << endl;
         handle_ls(v_addr.at(i));
-    }
     return 0;
 }
 
@@ -99,7 +105,9 @@ void get_param(int argc, char** argv, vector<char*> &v_addr)
         strcpy(addr, "./");
         v_addr.push_back(addr);
     }
-    param_none = !(param_a|param_l|param_R);
+    if(v_addr.size() > 1 || param_R)
+        addr_display = true;
+    return;
 }
 
 void handle_ls(const char* addr)
@@ -109,7 +117,9 @@ void handle_ls(const char* addr)
     char* filesBuf;
     if(NULL == (dirp = opendir(addr)))
     {
+
         perror("opendir()");
+        cerr << addr << " not found." << endl;
         return;
     }
     struct dirent* filespecs;
@@ -134,14 +144,41 @@ void handle_ls(const char* addr)
         exit(1);
     }
     sort(files.begin(), files.end(), sortFunc);
-    //for (int i = 0; i < files.size(); ++i)
-    //{
-    //    cout << files.at(i) << endl;
-    //}
+    if(newLine)
+        cout << endl;
+    if(addr_display)
+        cout << addr << ":" << endl;
     if(param_l)
         long_list_display(addr, files);
     else
         norm_display(files);
+    newLine = true;
+    if(param_R)
+    {
+        struct stat buf[files.size()];
+        char path[1000];
+        for (int i = 0; i < files.size(); ++i)
+        {
+            if(strcmp(files.at(i), ".") == 0 ||
+               strcmp(files.at(i), "..") == 0)
+               continue;
+            strcpy(path, addr);
+            strcat(path, files.at(i));
+            //cout << path << endl;
+            if(-1 == stat(path, &buf[i]))
+            {
+                perror("stat()");
+                exit(1);
+            }
+            if(S_ISDIR(buf[i].st_mode))
+            {
+                //strcat(path, "/");
+                handle_ls(path);
+                //cout << path << endl;
+            }
+            //cout << files.at(i) << endl;
+        }
+    }
     for(int i = 0; i < files.size(); ++i)
         delete[] files.at(i);
     return;
@@ -155,7 +192,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
     //}
     vector<char*> path;
     char* pathTemp;
-    int total = 0;
+    int total = 0;  //total blocks used
     vector<char*> linkNum;
     char* linkBuf;
     int max_link = 0;
@@ -171,13 +208,11 @@ void long_list_display(const char* addr, const vector<char*> &files)
     vector<char*> fsize;
     char* sizeBuf;
     int max_size = 0;
-    int max = 0;
     struct stat buf[files.size()];
 
     for(int i = 0; i < files.size(); ++i)
     {
         pathTemp = new char[1000];
-        max = std::max(max, (int)strlen(files.at(i)));
         strcpy(pathTemp, addr);
         strcat(pathTemp, files.at(i));
         path.push_back(pathTemp);
@@ -192,7 +227,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
         linkBuf = new char[5];
         sprintf(linkBuf, "%d", buf[i].st_nlink);
         linkNum.push_back(linkBuf);
-        max_link = std::max(max_link, (int)strlen(linkNum.at(i)));
+        max_link = max(max_link, (int)strlen(linkNum.at(i)));
         /* user name */
         errno = 0;
         ppwd = getpwuid(buf[i].st_uid);
@@ -202,7 +237,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
             exit(1);
         }
         userName.push_back(ppwd->pw_name);
-        max_uname = std::max(max_uname, (int)strlen(userName.at(i)));
+        max_uname = max(max_uname, (int)strlen(userName.at(i)));
         /* group name */
         errno = 0;
         pgr = getgrgid(buf[i].st_gid);
@@ -212,12 +247,12 @@ void long_list_display(const char* addr, const vector<char*> &files)
             exit(1);
         }
         groupName.push_back(pgr->gr_name);
-        max_grname = std::max(max_grname, (int)strlen(groupName.at(i)));
+        max_grname = max(max_grname, (int)strlen(groupName.at(i)));
         /* size in bytes */
         sizeBuf = new char[100];
         sprintf(sizeBuf, "%d", buf[i].st_size);
         fsize.push_back(sizeBuf);
-        max_size = std::max(max_size, (int)strlen(fsize.at(i)));
+        max_size = max(max_size, (int)strlen(fsize.at(i)));
         /* time of last modification */
         timeBuf = new char[50];
         ptm = localtime(&buf[i].st_mtime);
@@ -258,8 +293,57 @@ void long_list_display(const char* addr, const vector<char*> &files)
 
 void norm_display(const vector<char*> &files)
 {
-    for(int i = 0; i < files.size(); ++i)
-        cout << files.at(i) << "  ";
-    cout << endl;
+    int col, row;  //row number and column number
+    int* col_len;  //length of each column
+    col_len = new int[30];
+    format(row, col, files, col_len);
+    //cout << row << " " << col << endl;
+    //for(int i = 0; i < 3; ++i)
+    //    cout << col_len[i] << " ";
+    //exit(0);
+    for(int r = 0; r < row; ++r)
+    {
+        printf("%-*s", col_len[0], files.at(r));
+        //exit(0);
+        for(int c = 1; c < col && c*row+r < files.size(); ++c)
+        {
+            printf("  ");
+            printf("%-*s", col_len[c], files.at(c*row+r));
+        }
+        printf("\n");
+    }
+    //cout << endl;
+    delete[] col_len;
+    return;
+}
+
+void format(int &row, int &col, const vector<char*> &files, int* maxLen)
+{
+    //max length of a column
+    int row_len;  //length of a row
+    row = 1;
+    while(1)
+    {
+        row_len = 0;
+        for(int i = 0; i < 30; ++i)
+        {
+            maxLen[i] = 0;
+        }
+        col = ceil(files.size() / (double)row);
+        for(int c = 0; c < col; ++c)
+        {//colomn
+            for(int r = 0; c*row+r < files.size() && r < row; ++r)
+            {//row
+                maxLen[c] = max(maxLen[c], (int)strlen(files.at(c*row+r)));
+            }
+            //printf("%d\n", maxLen[c]);
+            row_len += maxLen[c];
+        }
+        row_len += 2 * (col - 1);
+        //cout << row_len << endl;
+        if(row_len <= max_col)
+            break;
+        ++row;
+    }
     return;
 }
