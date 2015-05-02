@@ -22,7 +22,7 @@ using namespace std;
 #define GRAY printf("\x1b[48;5;243m")
 #define RESET printf("\x1b[0m")
 
-static int max_col;                //terminal width
+static unsigned int max_col;                //terminal width
 static bool param_a = false;       //-a show hidden
 static bool param_l = false;       //-l long list
 static bool param_R = false;       //-R recursion
@@ -56,7 +56,7 @@ void handle_files(const vector<char*> &v_files);
 void handle_addr(const char* addr);
 void long_list_display(const char* addr, const vector<char*> &files);
 void norm_display(const char* addr, const vector<char*> &files);
-void format(unsigned &row, unsigned &col, const vector<char*> &files, int* maxLen);
+void format(unsigned &row, unsigned &col, const vector<char*> &files, unsigned* maxLen);
 
 int main(int argc, char** argv)
 {
@@ -66,10 +66,10 @@ int main(int argc, char** argv)
         perror("ioctl()");
         exit(1);
     }
-    //max_col = min((int)w.ws_col, 80);
-    max_col = w.ws_col;
+    max_col = min((int)w.ws_col, 132);
+    //max_col = w.ws_col;
     //printf ("lines %d\n", w.ws_row);
-    //printf ("columns %d\n", w.ws_col);
+    //printf ("columns %d\n", max_col);
     vector<char*> v_addr;  //vector storing input file address
     vector<char*> v_files;
     get_param(argc, argv, v_addr, v_files);
@@ -186,6 +186,8 @@ void handle_addr(const char* addr)
         perror("closedir()");
         exit(1);
     }
+    if(files.size() == 0)
+        return;
     sort(files.begin(), files.end(), sortFunc);
     if(newLine)
         cout << endl;
@@ -198,8 +200,8 @@ void handle_addr(const char* addr)
     newLine = true;
     if(param_R)
     {
-        struct stat buf[files.size()];
-        char path[1000];
+        struct stat *buf = new struct stat[files.size()];
+        char path[10000];
         for (unsigned i = 0; i < files.size(); ++i)
         {
             if(strcmp(files.at(i), ".") == 0 ||
@@ -223,6 +225,7 @@ void handle_addr(const char* addr)
             }
             //cout << files.at(i) << endl;
         }
+        delete[] buf;
     }
     for(unsigned i = 0; i < files.size(); ++i)
         delete[] files.at(i);
@@ -253,11 +256,10 @@ void long_list_display(const char* addr, const vector<char*> &files)
     vector<char*> fsize;
     char* sizeBuf;
     int max_size = 0;
-    struct stat buf[files.size()];
-
+    struct stat *buf = new struct stat[files.size()];
     for(unsigned i = 0; i < files.size(); ++i)
     {
-        pathTemp = new char[1000];
+        pathTemp = new char[10000];
         strcpy(pathTemp, addr);
         if(strlen(addr) != 0 &&           //if addr is a directory,
             addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
@@ -272,7 +274,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
         }
         total += buf[i].st_blocks;
         /* hard links */
-        linkBuf = new char[5];
+        linkBuf = new char[10];
         sprintf(linkBuf, "%lu", buf[i].st_nlink);
         linkNum.push_back(linkBuf);
         max_link = max(max_link, (int)strlen(linkNum.at(i)));
@@ -314,6 +316,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
     //    cout << path.at(i) << endl;
     //}
     cout << "total " << total/2 << endl;
+    char *pch, *filename;
     for(unsigned i = 0; i < files.size(); ++i)
     {
         cout << ((S_ISDIR(buf[i].st_mode)) ? "d":"-")
@@ -334,7 +337,13 @@ void long_list_display(const char* addr, const vector<char*> &files)
         delete[] fsize.at(i);
         printf("%s ", mtime.at(i));
         delete[] mtime.at(i);
-        if(files.at(i)[0] == '.')
+        filename = files.at(i);
+        pch = strtok(files.at(i), "/");
+        while (pch != NULL){
+            filename = pch;
+            pch = strtok(NULL, "/");
+        }
+        if(filename[0] == '.')
             GRAY;
         if(buf[i].st_mode & S_IXUSR)
             GREEN;
@@ -344,16 +353,17 @@ void long_list_display(const char* addr, const vector<char*> &files)
         RESET;
         printf("\n");
     }
+    delete[] buf;
     return;
 }
 
 void norm_display(const char* addr, const vector<char*> &files)
-{
-    struct stat buf[files.size()];
+{//normally display the files in current addr
+    struct stat *buf = new struct stat[files.size()];
     char* path;
     unsigned int col, row;  //row number and column number
-    int* col_len;  //width of each column
-    col_len = new int[30];
+    unsigned* col_len = new unsigned[100];  //width of each column
+    //cout << files.size() << endl;
     format(row, col, files, col_len);
     //cout << row << " " << col << endl;
     //for(int i = 0; i < 3; ++i)
@@ -361,7 +371,7 @@ void norm_display(const char* addr, const vector<char*> &files)
     //exit(0);
     for(unsigned i = 0; i < files.size(); ++i)
     {
-        path = new char[1000];
+        path = new char[10000];
         strcpy(path, addr);
         if(strlen(addr) != 0 &&           //if addr is a directory,
             addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
@@ -374,12 +384,22 @@ void norm_display(const char* addr, const vector<char*> &files)
             continue;
         }
         delete[] path;
-        path = NULL;
     }
+    char *pch, *fileTemp, *fileName;
     for(unsigned r = 0; r < row; ++r)
     {
-        if(files.at(r)[0] == '.')
+        fileTemp = new char[strlen(files.at(r))+1];
+        fileName = files.at(r);
+        strcpy(fileTemp, files.at(r));
+        pch = strtok(fileTemp, "/");
+        while (pch != NULL){
+            fileName = pch;
+            pch = strtok(NULL, "/");
+        }
+        if(fileName[0] == '.')
+        //if(files.at(r)[0] == '.')
             GRAY;
+        delete[] fileTemp;
         if(buf[r].st_mode & S_IXUSR)
             GREEN;
         if(S_ISDIR(buf[r].st_mode))
@@ -390,8 +410,17 @@ void norm_display(const char* addr, const vector<char*> &files)
         for(unsigned c = 1; c < col && c*row+r < files.size(); ++c)
         {
             printf("  ");
-            if(files.at(c*row+r)[0] == '.')
+            fileTemp = new char[strlen(files.at(c*row+r))];
+            fileName = files.at(c*row+r);
+            strcpy(fileTemp, files.at(c*row+r));
+            pch = strtok(fileTemp, "/");
+            while (pch != NULL){
+                fileName = pch;
+                pch = strtok(NULL, "/");
+            }
+            if(fileName[0] == '.')
                 GRAY;
+            delete[] fileTemp;
             if(buf[c*row+r].st_mode & S_IXUSR)
                 GREEN;
             if(S_ISDIR(buf[c*row+r].st_mode))
@@ -399,22 +428,24 @@ void norm_display(const char* addr, const vector<char*> &files)
             printf("%-*s", col_len[c], files.at(c*row+r));
             RESET;
         }
+        //cout << files.at(r);
         printf("\n");
     }
     //cout << endl;
     delete[] col_len;
+    delete[] buf;
     return;
 }
 
-void format(unsigned &row, unsigned &col, const vector<char*> &files, int* maxLen)
+void format(unsigned &row, unsigned &col, const vector<char*> &files, unsigned* maxLen)
 {//get the row number, column number and column width
     //max length of a column
-    int row_len;  //length of a row
+    unsigned row_len;  //length of a row
     row = 1;
     while(1)
     {
         row_len = 0;
-        for(int i = 0; i < 30; ++i)
+        for(int i = 0; i < 100; ++i)
         {
             maxLen[i] = 0;
         }
@@ -423,16 +454,16 @@ void format(unsigned &row, unsigned &col, const vector<char*> &files, int* maxLe
         {//colomn
             for(unsigned r = 0; c*row+r < files.size() && r < row; ++r)
             {//row
-                maxLen[c] = max(maxLen[c], (int)strlen(files.at(c*row+r)));
+                maxLen[c] = max(maxLen[c], (unsigned)strlen(files.at(c*row+r)));
+                //cout << "strlen: " << strlen(files.at(c*row+r)) << endl;
             }
-            //printf("%d\n", maxLen[c]);
+            //printf("column width: %d\n", maxLen[c]);
             row_len += maxLen[c];
         }
         row_len += 2 * (col - 1);
         //cout << row_len << endl;
         if(row_len <= max_col)
-            break;
+            return;
         ++row;
     }
-    return;
 }
