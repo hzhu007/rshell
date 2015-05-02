@@ -13,6 +13,12 @@ all: ./src/ls.cpp ./src/main.cpp
 	g++ $(MFLAGS) ./src/ls.cpp -o bin/ls
 	g++ $(MFLAGS) ./src/main.cpp -o bin/rshell
 
+cp: ./src/cp.cpp ./src/Timer.h
+	mkdir bin
+	g++ $(MFLAGS) ./src/cp.cpp -o bin/cp
+
+all: rshell cp
+
 run: ./bin/rshell
 	./bin/rshell
 
