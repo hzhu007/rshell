@@ -43,6 +43,7 @@ g++ compiler
     bin/ls
 
 ##Test cases
+###rshell
     # test comment
     # test a wrong command
         hahaha
@@ -97,6 +98,85 @@ g++ compiler
         exitwqew
     # test exit with parameters
         exit --flag -a num 123
+###ls
+    # no param
+    $ bin/ls
 
+    #one file, multiple files
+    $ bin/ls src/a.out
+    $ bin/ls src/a.out/
+    $ bin/ls nonexist
+    $ bin/ls nonexist/
+    $ bin/ls nonexist src/a.out
+    $ bin/ls nonexist/ src/a.out/ Makefile
+    $ bin/ls scr/a.out ./README.md  ../.vimrc Makefile ./src/ls.cpp
+    $ bin/ls src/a.out src/a.out src/a.out
+    $ bin/ls src/a.out src/a.out src/a.out Makefile  ../.vimrc
+
+    #one folder, multiple folders
+    $ bin/ls src
+    $ bin/ls ../test/core/
+    $ bin/ls ../test/core
+    $ bin/ls ./ src
+    $ bin/ls ../ ./   src/  bin .git
+    $ bin/ls ../  ../test/core/  .git
+
+    #file and folder
+    $ bin/ls src/a.out ./
+    $ bin/ls src/a.out ./ Makefile ../.vimrc
+    $ bin/ls src/a.out src ./ ../  Makefile ../.vimrc
+    $ bin/ls ../ scr/a.out ../test/core/ ./src/ls.cpp  .git  Makefile
+    $ bin/ls nonexist src/a.out
+    $ bin/ls nonexist src/a.out
+    $ bin/ls nonexist ./  src/a.out src/a.out Makefile  ../.vimrc
+    $ bin/ls nonexist ./ src/a.out ../ nonexist ./README.md ../.vimrc Makefile src/a.out
+
+    #flag
+    $ bin/ls -a
+    $ bin/ls -l
+    $ bin/ls -L
+    $ bin/ls -R
+    $ bin/ls -r
+    $ bin/ls a
+    $ bin/ls - a
+    $ bin/ls -l a
+    $ bin/ls -Rl a
+    $ bin/ls -al
+    $ bin/ls -l   -a
+    $ bin/ls -Rl
+    $ bin/ls -l   -R
+    $ bin/ls -error
+    $ bin/ls -a -l -error
+
+    #file with flag
+    $ bin/ls Makefile -a
+    $ bin/ls -l Makefile
+    $ bin/ls Makefile -R
+    $ bin/ls Makefile   -al
+    $ bin/ls Makefile   ./src/ls.cpp   -l -a
+    $ bin/ls src/a.out   ./README.md   ../.vimrc Makefile   ./src/ls.cpp -Ra -l
+    $ bin/ls src/a.out   ./README.md -a  ../.vimrc Makefile  -R ./src/ls.cpp  -l
+
+    #folder with flag
+    $ bin/ls . -a
+    $ bin/ls  ../ -l
+    $ bin/ls ~/ucr-cs100/textbook   -R
+    $ bin/ls ../.vim -lR
+    $ bin/ls ../.vim/    -la
+    $ bin/ls -l ../.vim/  -a
+    $ bin/ls ../ucr-cs100/people -aR
+    $ bin/ls ../ucr-cs100/people  -R  -a
+    $ bin/ls ../.vim  -lRa
+    $ bin/ls ../.vim  -l -R -a
+    $ bin/ls ../ucr-cs100/textbook -aR -l
+    $ bin/ls ../ucr-cs100/textbook -aR ./src src/ -l bin -l -R -a ../ucr-cs100/people
+
+    #combination
+    $ bin/ls ./ -a src/ls.cpp
+    $ bin/ls ./ -a src/ls.cpp -l ..
+    $ bin/ls ../ucr-cs100/textbook -Rl src/ls.cpp ..
+    $ bin/ls ../ucr-cs100/textbook -al Makefile ../.vim/ -R
+    $ bin/ls -R scr/a.out   ./README.md   ../.vimrc Makefile   ./src/ls.cpp -Ra -l  ../ucr-cs100/textbook .git -aR ./src src/ -l bin -l -R -a
 ## Known bugs
 When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit``` only ```ls``` will be executed and *rshell* won't exit.
+When files in my folder are too many (more than 150), my ```ls``` may crash (seem to use up stack).
