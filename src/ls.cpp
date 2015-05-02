@@ -79,8 +79,12 @@ int main(int argc, char** argv)
     {
         handle_files(v_files);
     }
-    for(unsigned i = 0; i < v_addr.size(); ++i)
+    for(unsigned i = 0; i < v_addr.size(); ++i){
         handle_addr(v_addr.at(i));
+        delete[] v_addr.at(i);
+    }
+    for(unsigned i = 0; i < v_files.size(); ++i)
+        delete[] v_files.at(i);
     return 0;
 }
 
@@ -238,7 +242,6 @@ void long_list_display(const char* addr, const vector<char*> &files)
     //{
     //    cout << files.at(i) << endl;
     //}
-    vector<char*> path;
     char* pathTemp;
     int total = 0;  //total blocks used
     vector<char*> linkNum;
@@ -265,9 +268,8 @@ void long_list_display(const char* addr, const vector<char*> &files)
             addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
             strcat(pathTemp, "/");        //to visit certain file with filename
         strcat(pathTemp, files.at(i));
-        path.push_back(pathTemp);
         //cout << pathTemp << endl;
-        if(-1 == stat(path.at(i), &buf[i]))
+        if(-1 == stat(pathTemp, &buf[i]))
         {
             perror("stat()");
             exit(1);
@@ -347,7 +349,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
         }
         if(fileName[0] == '.')
             GRAY;
-        delete fileTemp;
+        delete[] fileTemp;
         if(buf[i].st_mode & S_IXUSR)
             GREEN;
         if(S_ISDIR(buf[i].st_mode))
@@ -368,13 +370,13 @@ void norm_display(const char* addr, const vector<char*> &files)
     unsigned* col_len = new unsigned[100];  //width of each column
     //cout << files.size() << endl;
     format(row, col, files, col_len);
-    //cout << row << " " << col << endl;
+    //cout << "row: " << row << " col: " << col << endl;
     //for(int i = 0; i < 3; ++i)
     //    cout << col_len[i] << " ";
     //exit(0);
     for(unsigned i = 0; i < files.size(); ++i)
     {
-        path = new char[10000];
+        path = new char[1000];
         strcpy(path, addr);
         if(strlen(addr) != 0 &&           //if addr is a directory,
             addr[strlen(addr)-1] != '/')  //ensure address ends with '/'
@@ -384,6 +386,7 @@ void norm_display(const char* addr, const vector<char*> &files)
         {
             perror("stat()");
             cerr << path << " not found" << endl;
+            delete[] path;
             continue;
         }
         delete[] path;
@@ -413,7 +416,7 @@ void norm_display(const char* addr, const vector<char*> &files)
         for(unsigned c = 1; c < col && c*row+r < files.size(); ++c)
         {
             printf("  ");
-            fileTemp = new char[strlen(files.at(c*row+r))];
+            fileTemp = new char[strlen(files.at(c*row+r))+1];
             fileName = files.at(c*row+r);
             strcpy(fileTemp, files.at(c*row+r));
             pch = strtok(fileTemp, "/");
@@ -434,7 +437,6 @@ void norm_display(const char* addr, const vector<char*> &files)
         //cout << files.at(r);
         printf("\n");
     }
-    //cout << endl;
     delete[] col_len;
     delete[] buf;
     return;
