@@ -316,7 +316,7 @@ void long_list_display(const char* addr, const vector<char*> &files)
     //    cout << path.at(i) << endl;
     //}
     cout << "total " << total/2 << endl;
-    char *pch, *filename;
+    char *pch, *fileName, *fileTemp;
     for(unsigned i = 0; i < files.size(); ++i)
     {
         cout << ((S_ISDIR(buf[i].st_mode)) ? "d":"-")
@@ -337,14 +337,17 @@ void long_list_display(const char* addr, const vector<char*> &files)
         delete[] fsize.at(i);
         printf("%s ", mtime.at(i));
         delete[] mtime.at(i);
-        filename = files.at(i);
-        pch = strtok(files.at(i), "/");
+        fileTemp = new char[strlen(files.at(i))+1];
+        fileTemp = strcpy(fileTemp, files.at(i));
+        fileName = files.at(i);
+        pch = strtok(fileTemp, "/");
         while (pch != NULL){
-            filename = pch;
+            fileName = pch;
             pch = strtok(NULL, "/");
         }
-        if(filename[0] == '.')
+        if(fileName[0] == '.')
             GRAY;
+        delete fileTemp;
         if(buf[i].st_mode & S_IXUSR)
             GREEN;
         if(S_ISDIR(buf[i].st_mode))
