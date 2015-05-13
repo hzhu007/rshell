@@ -15,21 +15,22 @@ void display_info();
 char* command_input();
 void execution(char* command);
 void handle_command(char* command);
+void get_redirection(char* command, vector<struct redirection*> &out_redir);
 
 static bool lastSucc = true;    //if last command executed successfully
 static bool jumpCmd = false;    //if ignore the next command
 
-struct outRedir
+struct redirection
 {
     char* fileName;
-    int type;   //0 - >; 1 - >>; 2 - 2>
-    outRedir(const char* fileName, const int type)
+    int type;   //0 - >; 1 - >>; 2 - 2>; 3 - <
+    redirection(const char* fileName, const int type)
     {
         this->fileName = new char[strlen(fileName)+1];
         strcpy(this->fileName, fileName);
         this->type = type;
     }
-    ~outRedir()
+    ~redirection()
     {
         delete[] this->fileName;
     }
@@ -101,88 +102,10 @@ void execution(char* command)    //deal with one single command
     //    exit(0);
     //else if(0 == strncmp(command, "exit ", 5))
     //    exit(0);
-    char nameTemp[100];
     char* argv[1000];
-    struct outRedir* pstruct;
-    vector<struct outRedir*> out_redir;
+    vector<struct redirection*> out_redir;
     vector<char*> in_redir;
-    for(int i = 0; i < strlen(command); ++i)
-    {//traverse one single command to find redirect signs
-        if(command[i] == '>' && command[i+1] != '>')    //meet single >
-        {//output redirection >
-            int begin = i + 1;    //begin index of file name
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {
-                    cerr << "Need input after '>'" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
-            {
-                ++end;
-            }
-            strncpy(nameTemp, command+begin, end-begin+1);
-            nameTemp[end-begin+1] = '\0';
-            pstruct = new struct outRedir(nameTemp, 0);
-            out_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-        else if(command[i] == '>' && command[i+1] == '>')    //meet >>
-        {//output redirection >>
-            int begin = i + 2;    //begin index of file name
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {//cannot detect any character
-                    cerr << "Need input after \">>\"" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
-            {
-                ++end;
-            }
-            strncpy(nameTemp, command+begin, end-begin+1);
-            nameTemp[end-begin+1] = '\0';
-            pstruct = new struct outRedir(nameTemp, 1);
-            out_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-        else if((i == 0 && command[i] == '2' && command[i+1] == '>') ||
-                (command[i] == ' ' && command[i+1] == '2' && command[i+2] == '>'))    //meet 2>
-        {//output redirection 2>
-            int begin;    //begin index of file name
-            if(i == 0)
-                begin = i + 2;
-            else
-                begin = i + 3;
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {//cannot detect any character
-                    cerr << "Need input after \"2>\"" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
-            {
-                ++end;
-            }
-            strncpy(nameTemp, command+begin, end-begin+1);
-            nameTemp[end-begin+1] = '\0';
-            pstruct = new struct outRedir(nameTemp, 2);
-            out_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-    }
+    get_redirection(command, out_redir);
     //for(int i = 0; i < out_redir.size(); ++i)
     //{
     //    cout << "temp: " << out_redir.at(i) << endl;
@@ -273,6 +196,88 @@ void execution(char* command)    //deal with one single command
     return;
 }
 
+void get_redirection(char* command, vector<struct redirection*> &out_redir)
+{
+    struct redirection* pstruct;
+    char nameTemp[100];
+    for(int i = 0; i < strlen(command); ++i)
+    {//traverse one single command to find redirect signs
+        if(command[i] == '>' && command[i+1] != '>')    //meet single >
+        {//output redirection >
+            int begin = i + 1;    //begin index of file name
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {
+                    cerr << "Need input after '>'" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            pstruct = new struct redirection(nameTemp, 0);
+            out_redir.push_back(pstruct);
+            memset(command+i, ' ', end-i+1);
+        }
+        else if(command[i] == '>' && command[i+1] == '>')    //meet >>
+        {//output redirection >>
+            int begin = i + 2;    //begin index of file name
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {//cannot detect any character
+                    cerr << "Need input after \">>\"" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            pstruct = new struct redirection(nameTemp, 1);
+            out_redir.push_back(pstruct);
+            memset(command+i, ' ', end-i+1);
+        }
+        else if((i == 0 && command[i] == '2' && command[i+1] == '>') ||
+                (command[i] == ' ' && command[i+1] == '2' && command[i+2] == '>'))    //meet 2>
+        {//output redirection 2>
+            int begin;    //begin index of file name
+            if(i == 0)
+                begin = i + 2;
+            else
+                begin = i + 3;
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {//cannot detect any character
+                    cerr << "Need input after \"2>\"" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            pstruct = new struct redirection(nameTemp, 2);
+            out_redir.push_back(pstruct);
+            memset(command+i, ' ', end-i+1);
+        }
+    }
+}
 void handle_command(char* command)  //handle the command or commands
 {
     char* curr_cmd = command;   //pointer to a single command to be executed
