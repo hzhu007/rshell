@@ -19,6 +19,22 @@ void handle_command(char* command);
 static bool lastSucc = true;    //if last command executed successfully
 static bool jumpCmd = false;    //if ignore the next command
 
+struct outRedir
+{
+    char* fileName;
+    int type;   //0 - >; 1 - >>; 2 - 2>
+    outRedir(const char* fileName, const int type)
+    {
+        this->fileName = new char[strlen(fileName)+1];
+        strcpy(this->fileName, fileName);
+        this->type = type;
+    }
+    ~outRedir()
+    {
+        delete[] this->fileName;
+    }
+};
+
 int main()
 {
     char* command;
@@ -85,15 +101,16 @@ void execution(char* command)    //deal with one single command
     //    exit(0);
     //else if(0 == strncmp(command, "exit ", 5))
     //    exit(0);
-    char* temp;
+    char nameTemp[100];
     char* argv[1000];
+    struct outRedir* pstruct;
+    vector<struct outRedir*> out_redir;
     vector<char*> in_redir;
-    vector<char*> out_redir;
     for(int i = 0; i < strlen(command); ++i)
-    {
-        if(command[i] == '>')
-        {
-            int begin = i+1;    //begin index of file name
+    {//traverse one single command to find redirect signs
+        if(command[i] == '>' && command[i+1] != '>')    //meet single >
+        {//output redirection >
+            int begin = i + 1;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
             {
                 if(command[begin] == '\0')
@@ -108,10 +125,61 @@ void execution(char* command)    //deal with one single command
             {
                 ++end;
             }
-            temp = new char[end-begin+2];
-            strncpy(temp, command+begin, end-begin+1);
-            temp[end-begin+1] = '\0';
-            out_redir.push_back(temp);
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            pstruct = new struct outRedir(nameTemp, 0);
+            out_redir.push_back(pstruct);
+            memset(command+i, ' ', end-i+1);
+        }
+        else if(command[i] == '>' && command[i+1] == '>')    //meet >>
+        {//output redirection >>
+            int begin = i + 2;    //begin index of file name
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {//cannot detect any character
+                    cerr << "Need input after \">>\"" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            pstruct = new struct outRedir(nameTemp, 1);
+            out_redir.push_back(pstruct);
+            memset(command+i, ' ', end-i+1);
+        }
+        else if((i == 0 && command[i] == '2' && command[i+1] == '>') ||
+                (command[i] == ' ' && command[i+1] == '2' && command[i+2] == '>'))    //meet 2>
+        {//output redirection 2>
+            int begin;    //begin index of file name
+            if(i == 0)
+                begin = i + 2;
+            else
+                begin = i + 3;
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {//cannot detect any character
+                    cerr << "Need input after \"2>\"" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            pstruct = new struct outRedir(nameTemp, 2);
+            out_redir.push_back(pstruct);
             memset(command+i, ' ', end-i+1);
         }
     }
@@ -144,7 +212,29 @@ void execution(char* command)    //deal with one single command
             for(int i = 0; i < out_redir.size(); ++i)
             {
                 int fd;
-                if(-1 == (fd = open(out_redir.at(i), O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IRWXU)))
+                switch(out_redir.at(i)->type)
+                {
+                    case 0:
+                        fd = open(out_redir.at(i)->fileName, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+                        break;
+                    case 1:
+                        fd = open(out_redir.at(i)->fileName, O_CREAT|O_RDWR|O_APPEND, S_IRUSR|S_IWUSR);
+                        break;
+                    case 2:
+                        fd = open(out_redir.at(i)->fileName, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+                        if(-1 == fd)
+                        {
+                            perror("open() in execution()");
+                            exit(1);
+                        }
+                        if(-1 == dup2(fd, 2))
+                        {
+                            perror("dup2() in execution()");
+                            exit(1);
+                        }
+                        continue;
+                }
+                if(-1 == fd)
                 {
                     perror("open() in execution()");
                     exit(1);
@@ -179,10 +269,6 @@ void execution(char* command)    //deal with one single command
     for(int i = 0; i < in_redir.size(); ++i)
     {
         delete[] in_redir.at(i);
-    }
-    for(int i = 0; i < out_redir.size(); ++i)
-    {
-        delete[] out_redir.at(i);
     }
     return;
 }
