@@ -104,7 +104,7 @@ void execution(char* command)    //deal with one single command
                 ++begin;
             }
             int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0')
+            while(command[end+1] != ' ' && command[end+1] != '\0' && command[end+1] != '>')
             {
                 ++end;
             }
@@ -115,9 +115,12 @@ void execution(char* command)    //deal with one single command
             memset(command+i, ' ', end-i+1);
         }
     }
-    cout << "temp: " << temp << endl;
-    cout << "command: " << command << endl;
-    exit(0);
+    //for(int i = 0; i < out_redir.size(); ++i)
+    //{
+    //    cout << "temp: " << out_redir.at(i) << endl;
+    //}
+    //cout << "command: " << command << endl;
+    //exit(0);
     int i = 0;
     argv[i] = strtok(command, " ");    //split one command and flags into several cstring when meet ' '
     while(NULL != argv[i])             //store the command in argv[0] and flags in successive cstring
@@ -136,18 +139,21 @@ void execution(char* command)    //deal with one single command
     }
     else if(0 == pid)   //child process
     {
-        if(out_redir.size() != 0)
+        if(out_redir.size() != 0 || in_redir.size() != 0)
         {
-            int fd;
-            if(-1 == (fd = open(out_redir.at(0), O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IRWXU)))
+            for(int i = 0; i < out_redir.size(); ++i)
             {
-                perror("open() in execution()");
-                exit(1);
-            }
-            if(-1 == dup2(fd, 1))
-            {
-                perror("dup2() in execution()");
-                exit(1);
+                int fd;
+                if(-1 == (fd = open(out_redir.at(i), O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IRWXU)))
+                {
+                    perror("open() in execution()");
+                    exit(1);
+                }
+                if(-1 == dup2(fd, 1))
+                {
+                    perror("dup2() in execution()");
+                    exit(1);
+                }
             }
         }
         if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
