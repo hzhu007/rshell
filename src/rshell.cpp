@@ -24,12 +24,14 @@ static bool jumpCmd = false;    //if ignore the next command
 struct redirection
 {
     char* fileName;
-    int type;   //0 - >; 1 - >>; 2 - 2>; 3 - <
-    redirection(const char* fileName, const int type)
+    int type;   //0 - >; 1 - >>; 2 - <; 3 - <<<
+    int fd;     //STDIN_FILENO = 0; STDOUT_FILENO = 1; STDERR_FILENO = 2;
+    redirection(const char* fileName, const int type, const int fd)
     {
         this->fileName = new char[strlen(fileName)+1];
         strcpy(this->fileName, fileName);
         this->type = type;
+        this->fd = fd;
     }
     ~redirection()
     {
@@ -49,8 +51,8 @@ int main()
             continue;
         }
         handle_command(command);
+        delete[] command;
     }
-    delete[] command;
     return 0;
 }
 
@@ -75,7 +77,7 @@ char* command_input()   //get input and implement some preprocessing
 {
     string input;
     getline(cin, input);    //store input in a string
-    char* input_cstr = new char [input.length()+1];
+    char input_cstr[input.length()+1];
     strcpy(input_cstr, input.c_str());
     int countSpace = 0;
     for (int i = 0; *(input_cstr+i) != '\0'; ++i)   //replace the first '#' with terminal sign '\0'
@@ -93,288 +95,9 @@ char* command_input()   //get input and implement some preprocessing
         else
             break;
     }
-    input_cstr += countSpace;
-    return input_cstr;
-}
-
-void execution(char* command)    //deal with one single command
-{
-    //if(0 == strcmp(command, "exit"))
-    //    exit(0);
-    //else if(0 == strncmp(command, "exit ", 5))
-    //    exit(0);
-    char* argv[1000];
-    vector<struct redirection*> v_redir;
-    //vector<char*> in_redir;
-    get_redirection(command, v_redir);
-    //for(int i = 0; i < v_redir.size(); ++i)
-    //{
-    //    cout << "temp: " << v_redir.at(i) << endl;
-    //}
-    //cout << "command: " << command << endl;
-    //exit(0);
-    int i = 0;
-    argv[i] = strtok(command, " ");    //split one command and flags into several cstring when meet ' '
-    while(NULL != argv[i])             //store the command in argv[0] and flags in successive cstring
-    {
-        ++i;
-        argv[i] = strtok(NULL, " ");
-    }
-    if(0 == strcmp(argv[0], "exit"))
-        exit(0);
-
-    pid_t pid = fork();
-    if(-1 == pid)    //fork error
-    {
-        perror("fork() in execution()");
-        exit(1);
-    }
-    else if(0 == pid)   //child process
-    {
-        handle_redirect(v_redir);
-        if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
-        {
-            perror("execvp() in execution()");
-        }
-        exit(1);    //only execute when execvp() doesn't succeed
-    }
-    else    //parent process
-    {
-        int childStatus;    //used to store the child process's exit status
-        if(-1 == waitpid(pid, &childStatus, 0))
-            perror("wait() in execution()");    //wait error
-        if(WEXITSTATUS(childStatus) == 1)   //child process's exit value is 1
-        {                                   //meaning that the command isn't executed correctly
-            lastSucc = false;
-        }
-        else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
-        {                                       //meaning that the command is executed correctly
-            lastSucc = true;
-        }
-    }
-    //for(int i = 0; i < in_redir.size(); ++i)
-    //{
-    //    delete[] in_redir.at(i);
-    //}
-    return;
-}
-
-void get_redirection(char* command, vector<struct redirection*> &v_redir)
-{
-    struct redirection* pstruct;
-    char nameTemp[1000];
-    for(int i = 0; i < strlen(command); ++i)
-    {//traverse one single command to find redirect signs
-        if(command[i] == '>' && command[i+1] != '>')    //meet single >
-        {//output redirection >
-            int begin = i + 1;    //begin index of file name
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {
-                    cerr << "Need input after '>'" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0'
-                && command[end+1] != '>' && command[end+1] != '<')
-            {
-                ++end;
-            }
-            strncpy(nameTemp, command+begin, end-begin+1);
-            nameTemp[end-begin+1] = '\0';
-            pstruct = new struct redirection(nameTemp, 0);
-            v_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-        else if(command[i] == '>' && command[i+1] == '>')    //meet >>
-        {//output redirection >>
-            int begin = i + 2;    //begin index of file name
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {//cannot detect any character
-                    cerr << "Need input after \">>\"" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0'
-                && command[end+1] != '>' && command[end+1] != '<')
-            {
-                ++end;
-            }
-            strncpy(nameTemp, command+begin, end-begin+1);
-            nameTemp[end-begin+1] = '\0';
-            pstruct = new struct redirection(nameTemp, 1);
-            v_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-        else if((i == 0 && command[i] == '2' && command[i+1] == '>') ||
-                (command[i] == ' ' && command[i+1] == '2' && command[i+2] == '>'))    //meet 2>
-        {//output redirection 2>
-            int begin;    //begin index of file name
-            if(i == 0)
-                begin = i + 2;
-            else
-                begin = i + 3;
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {//cannot detect any character
-                    cerr << "Need input after \"2>\"" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0'
-                && command[end+1] != '>' && command[end+1] != '<')
-            {
-                ++end;
-            }
-            strncpy(nameTemp, command+begin, end-begin+1);
-            nameTemp[end-begin+1] = '\0';
-            pstruct = new struct redirection(nameTemp, 2);
-            v_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-        else if(command[i] == '<' && command[i+1] == '<' && command[i+2] == '<')
-        {//input redirection <<<
-            int begin = i + 3;    //begin index of file name
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {
-                    cerr << "Need input after \"<<<\"" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            if(command[begin] != '\"')
-            {
-                cerr << "Need a string quoted by \" after \"<<<\"" << endl;
-                exit(1);
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0'
-                && command[end+1] != '>' && command[end+1] != '<')
-            {
-                ++end;
-            }
-            if(command[end] != '\"' || end == begin)
-            {
-                cerr << "Need a string quoted by \" after \"<<<\"" << endl;
-                exit(1);
-            }
-            strncpy(nameTemp, command+begin+1, end-begin-1);
-            nameTemp[end-begin-1] = '\0';
-            pstruct = new struct redirection(nameTemp, 4);
-            v_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-        else if(command[i] == '<')
-        {//input redirection <
-            int begin = i + 1;    //begin index of file name
-            while(command[begin] == ' ' || command[begin] == '\0')
-            {
-                if(command[begin] == '\0')
-                {
-                    cerr << "Need input after '<'" << endl;
-                    exit(1);
-                }
-                ++begin;
-            }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0'
-                && command[end+1] != '>' && command[end+1] != '<')
-            {
-                ++end;
-            }
-            strncpy(nameTemp, command+begin, end-begin+1);
-            nameTemp[end-begin+1] = '\0';
-            pstruct = new struct redirection(nameTemp, 3);
-            v_redir.push_back(pstruct);
-            memset(command+i, ' ', end-i+1);
-        }
-    }
-}
-
-void handle_redirect(const vector<struct redirection*> &v_redir)
-{
-    if(v_redir.size() != 0)
-    {
-        for(int i = 0; i < v_redir.size(); ++i)
-        {
-            int fd;
-            switch(v_redir.at(i)->type)
-            {
-                /* > */
-                case 0:
-                    fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
-                    if(-1 == fd)
-                    {
-                        perror("open() in handle_redirect()");
-                        exit(1);
-                    }
-                    if(-1 == dup2(fd, 1))
-                    {
-                        perror("dup2() in handle_redirect()");
-                        exit(1);
-                    }
-                    continue;
-                /* >> */
-                case 1:
-                    fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_APPEND, S_IRUSR|S_IWUSR);
-                    if(-1 == fd)
-                    {
-                        perror("open() in handle_redirect()");
-                        exit(1);
-                    }
-                    if(-1 == dup2(fd, 1))
-                    {
-                        perror("dup2() in handle_redirect()");
-                        exit(1);
-                    }
-                    continue;
-                /* 2> */
-                case 2:
-                    fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
-                    if(-1 == fd)
-                    {
-                        perror("open() in handle_redirect()");
-                        exit(1);
-                    }
-                    if(-1 == dup2(fd, 2))
-                    {
-                        perror("dup2() in handle_redirect()");
-                        exit(1);
-                    }
-                    continue;
-                /* < */
-                case 3:
-                    fd = open(v_redir.at(i)->fileName, O_RDONLY);
-                    if(-1 == fd)
-                    {
-                        perror("open() in handle_redirect()");
-                        exit(1);
-                    }
-                    if(-1 == dup2(fd, 0))
-                    {
-                        perror("dup2() in handle_redirect()");
-                        exit(1);
-                    }
-                    continue;
-                /* <<< */
-                case 4:
-
-                    continue;
-            }
-        }
-    }
+    char* command = new char[input.length()+1];
+    strcpy(command, input_cstr+countSpace);
+    return command;
 }
 
 void handle_command(char* command)  //handle the command or commands
@@ -440,3 +163,302 @@ void handle_command(char* command)  //handle the command or commands
     }
     return;
 }
+
+void execution(char* command)    //deal with one single command
+{
+    //if(0 == strcmp(command, "exit"))
+    //    exit(0);
+    //else if(0 == strncmp(command, "exit ", 5))
+    //    exit(0);
+    char* argv[1000];
+    vector<struct redirection*> v_redir;
+    //vector<char*> in_redir;
+    get_redirection(command, v_redir);
+    //for(int i = 0; i < v_redir.size(); ++i)
+    //{
+    //    cout << "temp: " << v_redir.at(i) << endl;
+    //}
+    //cout << "command: " << command << endl;
+    //exit(0);
+    int i = 0;
+    argv[i] = strtok(command, " ");    //split one command and flags into several cstring when meet ' '
+    while(NULL != argv[i])             //store the command in argv[0] and flags in successive cstring
+    {
+        ++i;
+        argv[i] = strtok(NULL, " ");
+    }
+    if(0 == strcmp(argv[0], "exit"))
+        exit(0);
+
+    pid_t pid = fork();
+    if(-1 == pid)    //fork error
+    {
+        perror("fork() in execution()");
+        exit(1);
+    }
+    else if(0 == pid)   //child process
+    {
+        handle_redirect(v_redir);
+        if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
+        {
+            perror("execvp() in execution()");
+        }
+        exit(1);    //only execute when execvp() doesn't succeed
+    }
+    else    //parent process
+    {
+        int childStatus;    //used to store the child process's exit status
+        if(-1 == waitpid(pid, &childStatus, 0))
+            perror("wait() in execution()");    //wait error
+        int test = WEXITSTATUS(childStatus);
+        if(WEXITSTATUS(childStatus) == 1)   //child process's exit value is 1
+        {                                   //meaning that the command isn't executed correctly
+            lastSucc = false;
+        }
+        else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
+        {                                       //meaning that the command is executed correctly
+            lastSucc = true;
+        }
+    }
+    //for(int i = 0; i < in_redir.size(); ++i)
+    //{
+    //    delete[] in_redir.at(i);
+    //}
+    return;
+}
+
+void get_redirection(char* command, vector<struct redirection*> &v_redir)
+{
+    struct redirection* pstruct;
+    char nameTemp[1000];
+    for(int i = 0; i < strlen(command); ++i)
+    {//traverse one single command to find redirect signs
+        if(command[i] == '>' && command[i+1] != '>')    //meet single >
+        {//output redirection >
+            int begin = i + 1;    //begin index of file name
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {
+                    cerr << "Need input after '>'" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0'
+                    && command[end+1] != '>' && command[end+1] != '<')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            int fd = STDOUT_FILENO;
+            if(i != 0 && isdigit(command[i-1]) && (i == 1 || command[i-2] == ' '))
+            {
+                //cout << "Get fd! " << endl;
+                fd = (int)command[i-1];
+                memset(command+i-1, ' ', end-i+2);
+            }
+            else
+                memset(command+i, ' ', end-i+1);
+            //cout << command << endl;
+            pstruct = new struct redirection(nameTemp, 0, fd);
+            v_redir.push_back(pstruct);
+        }
+        else if(command[i] == '>' && command[i+1] == '>')    //meet >>
+        {//output redirection >>
+            int begin = i + 2;    //begin index of file name
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {//cannot detect any character
+                    cerr << "Need input after \">>\"" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0'
+                    && command[end+1] != '>' && command[end+1] != '<')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            int fd = STDOUT_FILENO;
+            if(i != 0 && isdigit(command[i-1]) && (i == 1 || command[i-2] == ' '))
+            {
+                //cout << "Get fd" << endl;
+                fd = (int)command[i-1];
+                memset(command+i-1, ' ', end-i+2);
+            }
+            else
+                memset(command+i, ' ', end-i+1);
+            pstruct = new struct redirection(nameTemp, 1, fd);
+            v_redir.push_back(pstruct);
+        }
+        //else if((i == 0 && command[i] == '2' && command[i+1] == '>') ||
+        //        (command[i] == ' ' && command[i+1] == '2' && command[i+2] == '>'))    //meet 2>
+        //{//output redirection 2>
+        //    int begin;    //begin index of file name
+        //    if(i == 0)
+        //        begin = i + 2;
+        //    else
+        //        begin = i + 3;
+        //    while(command[begin] == ' ' || command[begin] == '\0')
+        //    {
+        //        if(command[begin] == '\0')
+        //        {//cannot detect any character
+        //            cerr << "Need input after \"2>\"" << endl;
+        //            exit(1);
+        //        }
+        //        ++begin;
+        //    }
+        //    int end = begin;    //end index of file name
+        //    while(command[end+1] != ' ' && command[end+1] != '\0'
+        //            && command[end+1] != '>' && command[end+1] != '<')
+        //    {
+        //        ++end;
+        //    }
+        //    strncpy(nameTemp, command+begin, end-begin+1);
+        //    nameTemp[end-begin+1] = '\0';
+        //    pstruct = new struct redirection(nameTemp, 2, 2);
+        //    v_redir.push_back(pstruct);
+        //    memset(command+i, ' ', end-i+1);
+        //}
+        else if(command[i] == '<' && command[i+1] == '<' && command[i+2] == '<')
+        {//input redirection <<<
+            int begin = i + 3;    //begin index of file name
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {
+                    cerr << "Need input after \"<<<\"" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            if(command[begin] != '\"')
+            {
+                cerr << "Need a string quoted by \" after \"<<<\"" << endl;
+                exit(1);
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0'
+                    && command[end+1] != '>' && command[end+1] != '<')
+            {
+                ++end;
+            }
+            if(command[end] != '\"' || end == begin)
+            {
+                cerr << "Need a string quoted by \" after \"<<<\"" << endl;
+                exit(1);
+            }
+            strncpy(nameTemp, command+begin+1, end-begin-1);
+            nameTemp[end-begin-1] = '\0';
+            pstruct = new struct redirection(nameTemp, 3, STDIN_FILENO);
+            v_redir.push_back(pstruct);
+            memset(command+i, ' ', end-i+1);
+        }
+        else if(command[i] == '<')
+        {//input redirection <
+            int begin = i + 1;    //begin index of file name
+            while(command[begin] == ' ' || command[begin] == '\0')
+            {
+                if(command[begin] == '\0')
+                {
+                    cerr << "Need input after '<'" << endl;
+                    exit(1);
+                }
+                ++begin;
+            }
+            int end = begin;    //end index of file name
+            while(command[end+1] != ' ' && command[end+1] != '\0'
+                    && command[end+1] != '>' && command[end+1] != '<')
+            {
+                ++end;
+            }
+            strncpy(nameTemp, command+begin, end-begin+1);
+            nameTemp[end-begin+1] = '\0';
+            pstruct = new struct redirection(nameTemp, 2, STDIN_FILENO);
+            v_redir.push_back(pstruct);
+            memset(command+i, ' ', end-i+1);
+        }
+    }
+    return;
+}
+
+void handle_redirect(const vector<struct redirection*> &v_redir)
+{
+    if(v_redir.size() == 0)
+        return;
+    for(unsigned i = 0; i < v_redir.size(); ++i)
+    {
+        int fd;
+        switch(v_redir.at(i)->type)
+        {
+            /* > */
+            case 0:
+                fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+                if(-1 == fd)
+                {
+                    perror("open() in handle_redirect()");
+                    exit(1);
+                }
+                if(-1 == dup2(fd, v_redir.at(i)->fd))
+                {
+                    perror("dup2() in handle_redirect()");
+                    exit(1);
+                }
+                continue;
+            /* >> */
+            case 1:
+                fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_APPEND, S_IRUSR|S_IWUSR);
+                if(-1 == fd)
+                {
+                    perror("open() in handle_redirect()");
+                    exit(1);
+                }
+                if(-1 == dup2(fd, v_redir.at(i)->fd))
+                {
+                    perror("dup2() in handle_redirect()");
+                    exit(1);
+                }
+                continue;
+            ///* 2> */
+            //case 2:
+            //    fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+            //    if(-1 == fd)
+            //    {
+            //        perror("open() in handle_redirect()");
+            //        exit(1);
+            //    }
+            //    if(-1 == dup2(fd, 2))
+            //    {
+            //        perror("dup2() in handle_redirect()");
+            //        exit(1);
+            //    }
+            //    continue;
+            /* < */
+            case 2:
+                fd = open(v_redir.at(i)->fileName, O_RDONLY);
+                if(-1 == fd)
+                {
+                    perror("open() in handle_redirect()");
+                    exit(1);
+                }
+                if(-1 == dup2(fd, v_redir.at(i)->fd))
+                {
+                    perror("dup2() in handle_redirect()");
+                    exit(1);
+                }
+                continue;
+            /* <<< */
+            case 4:
+
+                continue;
+        }
+    }
+}
+
