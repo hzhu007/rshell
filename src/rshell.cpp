@@ -166,10 +166,6 @@ void handle_command(char* command)  //handle the command or commands
 
 void execution(char* command)    //deal with one single command
 {
-    //if(0 == strcmp(command, "exit"))
-    //    exit(0);
-    //else if(0 == strncmp(command, "exit ", 5))
-    //    exit(0);
     char* argv[1000];
     vector<struct redirection*> v_redir;
     //vector<char*> in_redir;
@@ -210,8 +206,8 @@ void execution(char* command)    //deal with one single command
         int childStatus;    //used to store the child process's exit status
         if(-1 == waitpid(pid, &childStatus, 0))
             perror("wait() in execution()");    //wait error
-        int test = WEXITSTATUS(childStatus);
-        if(WEXITSTATUS(childStatus) != 0)   //child process's exit value isn't 0
+        //int test = WEXITSTATUS(childStatus);
+        if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
         {                                   //meaning that the command isn't executed correctly
             lastSucc = false;
         }
@@ -367,12 +363,12 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
     {
         int fd;
 
+        const int PIPE_READ = 0;
+        const int PIPE_WRITE = 1;
+        int fd2[2];
+        int strLen = strlen(v_redir.at(i)->fileName)+1;
+        char temp[strLen+1];
 
-                const int PIPE_READ = 0;
-                const int PIPE_WRITE = 1;
-                int fd2[2];
-                int strLen = strlen(v_redir.at(i)->fileName)+1;
-                char temp[strLen+1];
         switch(v_redir.at(i)->type)
         {
             /* > */
@@ -403,20 +399,6 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                     exit(1);
                 }
                 continue;
-            ///* 2> */
-            //case 2:
-            //    fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
-            //    if(-1 == fd)
-            //    {
-            //        perror("open() in handle_redirect()");
-            //        exit(1);
-            //    }
-            //    if(-1 == dup2(fd, 2))
-            //    {
-            //        perror("dup2() in handle_redirect()");
-            //        exit(1);
-            //    }
-            //    continue;
             /* < */
             case 2:
                 fd = open(v_redir.at(i)->fileName, O_RDONLY);
@@ -433,8 +415,6 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                 continue;
             /* <<< */
             case 3:
-                //exit(0);
-                cout << "in <<<" << endl;
                 if(-1 == pipe(fd2))
                 {
                     perror("pipe() in handle_redirect()");
@@ -451,9 +431,6 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                     exit(1);
                 }
                 continue;
-            //default:
-            //    cout << "BANG!" << endl;
-            //    continue;
         }
     }
 }
