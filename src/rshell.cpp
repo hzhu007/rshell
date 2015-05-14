@@ -211,7 +211,7 @@ void execution(char* command)    //deal with one single command
         if(-1 == waitpid(pid, &childStatus, 0))
             perror("wait() in execution()");    //wait error
         int test = WEXITSTATUS(childStatus);
-        if(WEXITSTATUS(childStatus) == 1)   //child process's exit value is 1
+        if(WEXITSTATUS(childStatus) != 0)   //child process's exit value isn't 0
         {                                   //meaning that the command isn't executed correctly
             lastSucc = false;
         }
@@ -257,7 +257,7 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
             if(i != 0 && isdigit(command[i-1]) && (i == 1 || command[i-2] == ' '))
             {
                 //cout << "Get fd! " << endl;
-                fd = (int)command[i-1];
+                fd = command[i-1] - '0';
                 memset(command+i-1, ' ', end-i+2);
             }
             else
@@ -290,7 +290,7 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
             if(i != 0 && isdigit(command[i-1]) && (i == 1 || command[i-2] == ' '))
             {
                 //cout << "Get fd" << endl;
-                fd = (int)command[i-1];
+                fd = command[i-1] - '0';
                 memset(command+i-1, ' ', end-i+2);
             }
             else
@@ -298,35 +298,6 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
             pstruct = new struct redirection(nameTemp, 1, fd);
             v_redir.push_back(pstruct);
         }
-        //else if((i == 0 && command[i] == '2' && command[i+1] == '>') ||
-        //        (command[i] == ' ' && command[i+1] == '2' && command[i+2] == '>'))    //meet 2>
-        //{//output redirection 2>
-        //    int begin;    //begin index of file name
-        //    if(i == 0)
-        //        begin = i + 2;
-        //    else
-        //        begin = i + 3;
-        //    while(command[begin] == ' ' || command[begin] == '\0')
-        //    {
-        //        if(command[begin] == '\0')
-        //        {//cannot detect any character
-        //            cerr << "Need input after \"2>\"" << endl;
-        //            exit(1);
-        //        }
-        //        ++begin;
-        //    }
-        //    int end = begin;    //end index of file name
-        //    while(command[end+1] != ' ' && command[end+1] != '\0'
-        //            && command[end+1] != '>' && command[end+1] != '<')
-        //    {
-        //        ++end;
-        //    }
-        //    strncpy(nameTemp, command+begin, end-begin+1);
-        //    nameTemp[end-begin+1] = '\0';
-        //    pstruct = new struct redirection(nameTemp, 2, 2);
-        //    v_redir.push_back(pstruct);
-        //    memset(command+i, ' ', end-i+1);
-        //}
         else if(command[i] == '<' && command[i+1] == '<' && command[i+2] == '<')
         {//input redirection <<<
             int begin = i + 3;    //begin index of file name
@@ -344,13 +315,12 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
                 cerr << "Need a string quoted by \" after \"<<<\"" << endl;
                 exit(1);
             }
-            int end = begin;    //end index of file name
-            while(command[end+1] != ' ' && command[end+1] != '\0'
-                    && command[end+1] != '>' && command[end+1] != '<')
+            int end = strlen(command) - 1;    //end index of file name
+            while(command[end] != '\"')
             {
-                ++end;
+                --end;
             }
-            if(command[end] != '\"' || end == begin)
+            if(end == begin)
             {
                 cerr << "Need a string quoted by \" after \"<<<\"" << endl;
                 exit(1);
@@ -396,6 +366,13 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
     for(unsigned i = 0; i < v_redir.size(); ++i)
     {
         int fd;
+
+
+                const int PIPE_READ = 0;
+                const int PIPE_WRITE = 1;
+                int fd2[2];
+                int strLen = strlen(v_redir.at(i)->fileName)+1;
+                char temp[strLen+1];
         switch(v_redir.at(i)->type)
         {
             /* > */
@@ -455,9 +432,28 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                 }
                 continue;
             /* <<< */
-            case 4:
-
+            case 3:
+                //exit(0);
+                cout << "in <<<" << endl;
+                if(-1 == pipe(fd2))
+                {
+                    perror("pipe() in handle_redirect()");
+                    exit(1);
+                }
+                strcpy(temp, v_redir.at(i)->fileName);
+                strcat(temp, "\n");
+                //cout << temp;
+                write(fd2[PIPE_WRITE], temp, strLen+1);
+                close(fd2[PIPE_WRITE]);
+                if(-1 == dup2(fd2[PIPE_READ], 0))
+                {
+                    perror("dup2() in handle_redirect()");
+                    exit(1);
+                }
                 continue;
+            //default:
+            //    cout << "BANG!" << endl;
+            //    continue;
         }
     }
 }
