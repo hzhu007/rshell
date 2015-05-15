@@ -493,8 +493,16 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                 strcpy(temp, v_redir.at(i)->fileName);
                 strcat(temp, "\n");
                 //cout << temp;
-                write(fd2[PIPE_WRITE], temp, strLen+1);
-                close(fd2[PIPE_WRITE]);
+                if(-1 == write(fd2[PIPE_WRITE], temp, strLen+1))
+                {
+                    perror("write() in handle_redirect()");
+                    exit(1);
+                }
+                if(-1 = close(fd2[PIPE_WRITE]))
+                {
+                    perror("close() in handle_redirect()");
+                    exit(1);
+                }
                 if(-1 == dup2(fd2[PIPE_READ], 0))
                 {
                     perror("dup2() in handle_redirect()");
