@@ -166,7 +166,7 @@ void handle_command(char* command)  //handle the command or commands
 
 void execution(char* command)    //deal with one single command
 {
-    char *lhs, *rhs;
+    char *lhs, *rhs = NULL;
     for(int i = 0; i < strlen(command); ++i)
     {
         if(command[i] == '|')
@@ -174,6 +174,8 @@ void execution(char* command)    //deal with one single command
             lhs = command;
             command[i] = '\0';
             rhs = command+i+1;
+            //cout << "L: " << lhs << " R: " << rhs << endl;
+            //exit(0);
             const int PIPE_READ = 0;
             const int PIPE_WRITE = 1;
             int fd[2];
@@ -190,6 +192,7 @@ void execution(char* command)    //deal with one single command
             }
             else if(pid == 0)
             {//child process, handle left-hand side command
+                //cout << "in child" << endl;
                 if(-1 == dup2(fd[PIPE_WRITE], 1))
                 {
                     perror("dup2() in execution()");
@@ -253,6 +256,8 @@ void execution(char* command)    //deal with one single command
         ++i;
         argv[i] = strtok(NULL, " ");
     }
+    if(NULL == argv[0])
+        return;
     if(0 == strcmp(argv[0], "exit"))
         exit(0);
 
@@ -265,6 +270,7 @@ void execution(char* command)    //deal with one single command
     else if(0 == pid)   //child process
     {
         handle_redirect(v_redir);
+        //cout << argv[0] << endl;
         if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
         {
             perror("execvp() in execution()");
@@ -276,7 +282,6 @@ void execution(char* command)    //deal with one single command
         int childStatus;    //used to store the child process's exit status
         if(-1 == waitpid(pid, &childStatus, 0))
             perror("wait() in execution()");    //wait error
-        //int test = WEXITSTATUS(childStatus);
         if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
         {                                   //meaning that the command isn't executed correctly
             lastSucc = false;
@@ -454,7 +459,7 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                     perror("dup2() in handle_redirect()");
                     exit(1);
                 }
-                continue;
+                break;
             /* >> */
             case 1:
                 fd = open(v_redir.at(i)->fileName, O_CREAT|O_RDWR|O_APPEND, S_IRUSR|S_IWUSR);
@@ -468,7 +473,7 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                     perror("dup2() in handle_redirect()");
                     exit(1);
                 }
-                continue;
+                break;
             /* < */
             case 2:
                 fd = open(v_redir.at(i)->fileName, O_RDONLY);
@@ -482,7 +487,7 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                     perror("dup2() in handle_redirect()");
                     exit(1);
                 }
-                continue;
+                break;
             /* <<< */
             case 3:
                 if(-1 == pipe(fd2))
@@ -498,7 +503,7 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                     perror("write() in handle_redirect()");
                     exit(1);
                 }
-                if(-1 = close(fd2[PIPE_WRITE]))
+                if(-1 == close(fd2[PIPE_WRITE]))
                 {
                     perror("close() in handle_redirect()");
                     exit(1);
@@ -508,8 +513,9 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                     perror("dup2() in handle_redirect()");
                     exit(1);
                 }
-                continue;
+                break;
         }
+        v_redir.at(i)->~redirection();
     }
 }
 
