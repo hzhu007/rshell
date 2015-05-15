@@ -166,9 +166,79 @@ void handle_command(char* command)  //handle the command or commands
 
 void execution(char* command)    //deal with one single command
 {
+    char *lhs, *rhs;
+    for(int i = 0; i < strlen(command); ++i)
+    {
+        if(command[i] == '|')
+        {
+            lhs = command;
+            command[i] = '\0';
+            rhs = command+i+1;
+            const int PIPE_READ = 0;
+            const int PIPE_WRITE = 1;
+            int fd[2];
+            if(-1 == pipe(fd))
+            {
+                perror("pipe() in execution()");
+                exit(1);
+            }
+            int pid = fork();
+            if(-1 == pid)
+            {
+                perror("fork() in execution()");
+                exit(1);
+            }
+            else if(pid == 0)
+            {//child process, handle left-hand side command
+                if(-1 == dup2(fd[PIPE_WRITE], 1))
+                {
+                    perror("dup2() in execution()");
+                    exit(1);
+                }
+                if(-1 == close(fd[PIPE_READ]))
+                {
+                    perror("close() in execution()");
+                    exit(1);
+                }
+                execution(lhs);
+                exit(0);    //fork() in execution(), the parent process would return here
+            }
+            else
+            {//parent process, handle right-hand side command
+                int save_stdin;
+                if(-1 == (save_stdin = dup(0))) //need to restore later or infinite loop
+                {
+                    perror("dup() in execution()");
+                    exit(1);
+                }
+                if(-1 == dup2(fd[PIPE_READ],0))//make stdin the read end of the pipe
+                {
+                    perror("dup2() in execution()");
+                    exit(1);
+                }
+                if(-1 == close(fd[PIPE_WRITE]))//close the write end of the pipe because we're not doing anything with it right now
+                {
+                    perror("close() in execution()");
+                    exit(1);
+                }
+                if(-1 == wait(0)) //wait for the child process to finish executing
+                {
+                    perror("wait() in execution()");
+                    exit(1);
+                }
+                execution(rhs);
+                if(-1 == dup2(save_stdin,0))//restore stdin
+                {
+                    perror("There is an error with dup2. ");
+                    exit(1);
+                }
+                return;
+            }
+        }
+    }
+
     char* argv[1000];
     vector<struct redirection*> v_redir;
-    //vector<char*> in_redir;
     get_redirection(command, v_redir);
     //for(int i = 0; i < v_redir.size(); ++i)
     //{
