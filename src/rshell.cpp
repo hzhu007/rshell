@@ -16,7 +16,7 @@ char* command_input();
 void execution(char* command);
 void handle_command(char* command);
 int get_redirection(char* command, vector<struct redirection*> &v_redir);
-void handle_redirect(const vector<struct redirection*> &v_redir);
+int handle_redirect(const vector<struct redirection*> &v_redir);
 
 static bool lastSucc = true;    //if last command executed successfully
 static bool jumpCmd = false;    //if ignore the next command
@@ -270,7 +270,8 @@ void execution(char* command)    //deal with one single command
     }
     else if(0 == pid)   //child process
     {
-        handle_redirect(v_redir);
+        if(-1 == handle_redirect(v_redir))
+            return;
         //cout << argv[0] << endl;
         if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
         {
@@ -431,10 +432,10 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
     return 0;
 }
 
-void handle_redirect(const vector<struct redirection*> &v_redir)
+int handle_redirect(const vector<struct redirection*> &v_redir)
 {
     if(v_redir.size() == 0)
-        return;
+        return 0;
     for(unsigned i = 0; i < v_redir.size(); ++i)
     {
         int fd;
@@ -453,7 +454,7 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                 if(-1 == fd)
                 {
                     perror("open() in handle_redirect()");
-                    exit(1);
+                    return -1;
                 }
                 if(-1 == dup2(fd, v_redir.at(i)->fd))
                 {
@@ -467,7 +468,7 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                 if(-1 == fd)
                 {
                     perror("open() in handle_redirect()");
-                    exit(1);
+                    return -1;
                 }
                 if(-1 == dup2(fd, v_redir.at(i)->fd))
                 {
@@ -481,7 +482,7 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
                 if(-1 == fd)
                 {
                     perror("open() in handle_redirect()");
-                    exit(1);
+                    return -1;
                 }
                 if(-1 == dup2(fd, v_redir.at(i)->fd))
                 {
@@ -518,5 +519,6 @@ void handle_redirect(const vector<struct redirection*> &v_redir)
         }
         v_redir.at(i)->~redirection();
     }
+    return 0;
 }
 
