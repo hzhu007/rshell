@@ -15,7 +15,7 @@ void display_info();
 char* command_input();
 void execution(char* command);
 void handle_command(char* command);
-void get_redirection(char* command, vector<struct redirection*> &v_redir);
+int get_redirection(char* command, vector<struct redirection*> &v_redir);
 void handle_redirect(const vector<struct redirection*> &v_redir);
 
 static bool lastSucc = true;    //if last command executed successfully
@@ -242,7 +242,8 @@ void execution(char* command)    //deal with one single command
 
     char* argv[1000];
     vector<struct redirection*> v_redir;
-    get_redirection(command, v_redir);
+    if(-1 == get_redirection(command, v_redir))
+        return;
     //for(int i = 0; i < v_redir.size(); ++i)
     //{
     //    cout << "temp: " << v_redir.at(i) << endl;
@@ -298,7 +299,7 @@ void execution(char* command)    //deal with one single command
     return;
 }
 
-void get_redirection(char* command, vector<struct redirection*> &v_redir)
+int get_redirection(char* command, vector<struct redirection*> &v_redir)
 {
     struct redirection* pstruct;
     char nameTemp[1000];
@@ -312,7 +313,7 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after '>'" << endl;
-                    exit(1);
+                    return -1;
                 }
                 ++begin;
             }
@@ -345,7 +346,7 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
                 if(command[begin] == '\0')
                 {//cannot detect any character
                     cerr << "Need input after \">>\"" << endl;
-                    exit(1);
+                    return -1;
                 }
                 ++begin;
             }
@@ -377,14 +378,14 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after \"<<<\"" << endl;
-                    exit(1);
+                    return -1;
                 }
                 ++begin;
             }
             if(command[begin] != '\"')
             {
                 cerr << "Need a string quoted by \" after \"<<<\"" << endl;
-                exit(1);
+                return -1;
             }
             int end = strlen(command) - 1;    //end index of file name
             while(command[end] != '\"')
@@ -394,7 +395,7 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
             if(end == begin)
             {
                 cerr << "Need a string quoted by \" after \"<<<\"" << endl;
-                exit(1);
+                return -1;
             }
             strncpy(nameTemp, command+begin+1, end-begin-1);
             nameTemp[end-begin-1] = '\0';
@@ -410,7 +411,7 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after '<'" << endl;
-                    exit(1);
+                    return -1;
                 }
                 ++begin;
             }
@@ -427,7 +428,7 @@ void get_redirection(char* command, vector<struct redirection*> &v_redir)
             memset(command+i, ' ', end-i+1);
         }
     }
-    return;
+    return 0;
 }
 
 void handle_redirect(const vector<struct redirection*> &v_redir)
