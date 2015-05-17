@@ -290,4 +290,4 @@ g++ compiler
 ## Known bugs
 When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit``` only ```ls``` will be executed and *rshell* won't exit.
 
-When files in my folder are too many (more than 150), my ```ls``` may crash (seem to use up stack).
+When files in my folder are too many (more than 150), my ```ls``` may crash (seem to use up heap).
