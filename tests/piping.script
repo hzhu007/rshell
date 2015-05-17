@@ -1,0 +1,1204 @@
+Script started on Sun 17 May 2015 01:13:16 AM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ rshe[K[K[K[Kbin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #input redirection <
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat < src/Timer.h
+/* C++ interface for program benchmark timer management */
+
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+//extern "C" int gettimeofday(timeval *tp, void *tzp);
+//extern "C" int getrusage(int who, struct rusage *rusag);
+
+class Timer {
+    public:
+    int start();
+    int elapsedWallclockTime (double &);
+    int elapsedUserTime (double &);
+    int elapsedSystemTime (double &);
+    int elapsedTime (double &wc, double &us, double &system);
+    private:
+    rusage old_us_time;
+    rusage new_us_time;
+    timeval old_wc_time;
+    timeval new_wc_time;
+};
+
+int Timer::start() {
+    if (gettimeofday (&this->old_wc_time, 0) == -1
+        || getrusage (RUSAGE_SELF, &this->old_us_time) == -1)
+        return -1;
+    else
+        return 0;
+}
+int Timer::elapsedWallclockTime (double &wc) {
+    if (gettimeofday (&this->new_wc_time, 0) == -1)
+        return -1;
+    wc = (this->new_wc_time.tv_sec - this->old_wc_time.tv_sec)
+        + (this->new_wc_time.tv_usec - this->old_wc_time.tv_usec) / 1000000.0;
+    return 0;
+}
+
+int Timer::elapsedUserTime (double &ut) {
+    if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+        return -1;
+    ut = (this->new_us_time.ru_utime.tv_sec - this->old_us_time.ru_utime.tv_sec)
+        + ((this->new_us_time.ru_utime.tv_usec
+        - this->old_us_time.ru_utime.tv_usec) / 1000000.0);
+    return 0;
+ }
+
+int Timer::elapsedSystemTime (double &st) {
+    if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+        return -1;
+    st = (this->new_us_time.ru_stime.tv_sec - this->old_us_time.ru_stime.tv_sec)
+        + ((this->new_us_time.ru_stime.tv_usec
+        - this->old_us_time.ru_stime.tv_usec) / 1000000.0);
+    return 0;
+}
+
+int Timer::elapsedTime (double &wallclock, double &user_time, double &system_time) {
+    if (this->elapsedWallclockTime (wallclock) == -1)
+        return -1;
+    else {
+        if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+            return -1;
+        user_time = (this->new_us_time.ru_utime.tv_sec
+            - this->old_us_time.ru_utime.tv_sec)
+            + ((this->new_us_time.ru_utime.tv_usec
+            - this->old_us_time.ru_utime.tv_usec) / 1000000.0);
+        system_time = (this->new_us_time.ru_stime.tv_sec
+            - this->old_us_time.ru_stime.tv_sec)
+            + ((this->new_us_time.ru_stime.tv_usec
+            - this->old_us_time.ru_stime.tv_usec) / 1000000.0);
+        return 0;
+    }
+}
+
+/* Example of use
+#include "Timer.h"
+#include <iostream>
+int main() {
+    Timer t;
+    double eTime;
+    t.start();
+    for (int i=0, j; i<1000000000; i++)
+        j++;
+    t.elapsedUserTime(eTime);
+    cout << eTime << endl;
+}
+*/
+[rshell]hzhu007@hammer.cs.ucr.edu $ grep cout<src/Timer.h
+    cout << eTime << endl;
+[rshell]hzhu007@hammer.cs.ucr.edu $    cat    <   src/Timer.h
+/* C++ interface for program benchmark timer management */
+
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+//extern "C" int gettimeofday(timeval *tp, void *tzp);
+//extern "C" int getrusage(int who, struct rusage *rusag);
+
+class Timer {
+    public:
+    int start();
+    int elapsedWallclockTime (double &);
+    int elapsedUserTime (double &);
+    int elapsedSystemTime (double &);
+    int elapsedTime (double &wc, double &us, double &system);
+    private:
+    rusage old_us_time;
+    rusage new_us_time;
+    timeval old_wc_time;
+    timeval new_wc_time;
+};
+
+int Timer::start() {
+    if (gettimeofday (&this->old_wc_time, 0) == -1
+        || getrusage (RUSAGE_SELF, &this->old_us_time) == -1)
+        return -1;
+    else
+        return 0;
+}
+int Timer::elapsedWallclockTime (double &wc) {
+    if (gettimeofday (&this->new_wc_time, 0) == -1)
+        return -1;
+    wc = (this->new_wc_time.tv_sec - this->old_wc_time.tv_sec)
+        + (this->new_wc_time.tv_usec - this->old_wc_time.tv_usec) / 1000000.0;
+    return 0;
+}
+
+int Timer::elapsedUserTime (double &ut) {
+    if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+        return -1;
+    ut = (this->new_us_time.ru_utime.tv_sec - this->old_us_time.ru_utime.tv_sec)
+        + ((this->new_us_time.ru_utime.tv_usec
+        - this->old_us_time.ru_utime.tv_usec) / 1000000.0);
+    return 0;
+ }
+
+int Timer::elapsedSystemTime (double &st) {
+    if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+        return -1;
+    st = (this->new_us_time.ru_stime.tv_sec - this->old_us_time.ru_stime.tv_sec)
+        + ((this->new_us_time.ru_stime.tv_usec
+        - this->old_us_time.ru_stime.tv_usec) / 1000000.0);
+    return 0;
+}
+
+int Timer::elapsedTime (double &wallclock, double &user_time, double &system_time) {
+    if (this->elapsedWallclockTime (wallclock) == -1)
+        return -1;
+    else {
+        if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+            return -1;
+        user_time = (this->new_us_time.ru_utime.tv_sec
+            - this->old_us_time.ru_utime.tv_sec)
+            + ((this->new_us_time.ru_utime.tv_usec
+            - this->old_us_time.ru_utime.tv_usec) / 1000000.0);
+        system_time = (this->new_us_time.ru_stime.tv_sec
+            - this->old_us_time.ru_stime.tv_sec)
+            + ((this->new_us_time.ru_stime.tv_usec
+            - this->old_us_time.ru_stime.tv_usec) / 1000000.0);
+        return 0;
+    }
+}
+
+/* Example of use
+#include "Timer.h"
+#include <iostream>
+int main() {
+    Timer t;
+    double eTime;
+    t.start();
+    for (int i=0, j; i<1000000000; i++)
+        j++;
+    t.elapsedUserTime(eTime);
+    cout << eTime << endl;
+}
+*/
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat < nonexist
+open() in handle_redirect(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat <
+Need input after '<'
+[rshell]hzhu007@hammer.cs.ucr.edu $ <  src/Timer.h
+[rshell]hzhu007@hammer.cs.ucr.edu $    <  src/test
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat<src/ls.cpp<src/cp.cpp<  src/mv.cpp  <  src/rshell.cpp  <  src/Timer.h
+/* C++ interface for program benchmark timer management */
+
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+//extern "C" int gettimeofday(timeval *tp, void *tzp);
+//extern "C" int getrusage(int who, struct rusage *rusag);
+
+class Timer {
+    public:
+    int start();
+    int elapsedWallclockTime (double &);
+    int elapsedUserTime (double &);
+    int elapsedSystemTime (double &);
+    int elapsedTime (double &wc, double &us, double &system);
+    private:
+    rusage old_us_time;
+    rusage new_us_time;
+    timeval old_wc_time;
+    timeval new_wc_time;
+};
+
+int Timer::start() {
+    if (gettimeofday (&this->old_wc_time, 0) == -1
+        || getrusage (RUSAGE_SELF, &this->old_us_time) == -1)
+        return -1;
+    else
+        return 0;
+}
+int Timer::elapsedWallclockTime (double &wc) {
+    if (gettimeofday (&this->new_wc_time, 0) == -1)
+        return -1;
+    wc = (this->new_wc_time.tv_sec - this->old_wc_time.tv_sec)
+        + (this->new_wc_time.tv_usec - this->old_wc_time.tv_usec) / 1000000.0;
+    return 0;
+}
+
+int Timer::elapsedUserTime (double &ut) {
+    if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+        return -1;
+    ut = (this->new_us_time.ru_utime.tv_sec - this->old_us_time.ru_utime.tv_sec)
+        + ((this->new_us_time.ru_utime.tv_usec
+        - this->old_us_time.ru_utime.tv_usec) / 1000000.0);
+    return 0;
+ }
+
+int Timer::elapsedSystemTime (double &st) {
+    if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+        return -1;
+    st = (this->new_us_time.ru_stime.tv_sec - this->old_us_time.ru_stime.tv_sec)
+        + ((this->new_us_time.ru_stime.tv_usec
+        - this->old_us_time.ru_stime.tv_usec) / 1000000.0);
+    return 0;
+}
+
+int Timer::elapsedTime (double &wallclock, double &user_time, double &system_time) {
+    if (this->elapsedWallclockTime (wallclock) == -1)
+        return -1;
+    else {
+        if (getrusage (RUSAGE_SELF, &this->new_us_time) == -1)
+            return -1;
+        user_time = (this->new_us_time.ru_utime.tv_sec
+            - this->old_us_time.ru_utime.tv_sec)
+            + ((this->new_us_time.ru_utime.tv_usec
+            - this->old_us_time.ru_utime.tv_usec) / 1000000.0);
+        system_time = (this->new_us_time.ru_stime.tv_sec
+            - this->old_us_time.ru_stime.tv_sec)
+            + ((this->new_us_time.ru_stime.tv_usec
+            - this->old_us_time.ru_stime.tv_usec) / 1000000.0);
+        return 0;
+    }
+}
+
+/* Example of use
+#include "Timer.h"
+#include <iostream>
+int main() {
+    Timer t;
+    double eTime;
+    t.start();
+    for (int i=0, j; i<1000000000; i++)
+        j++;
+    t.elapsedUserTime(eTime);
+    cout << eTime << endl;
+}
+*/
+[rshell]hzhu007@hammer.cs.ucr.edu $ #input redirection <<<
+[rshell]hzhu007@hammer.cs.ucr.edu $    cat   <<<    "haha"
+haha
+ [rshell]hzhu007@hammer.cs.ucr.edu $ grep 2 -a<<<"1a 2b 3c 4d"
+1a 2b 3c 4d
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat <<< """"
+""
+ [rshell]hzhu007@hammer.cs.ucr.edu $   cat <<< """
+"
+ [rshell]hzhu007@hammer.cs.ucr.edu $ cat <<<
+Need input after "<<<"
+[rshell]hzhu007@hammer.cs.ucr.edu $ <<<
+Need input after "<<<"
+[rshell]hzhu007@hammer.cs.ucr.edu $    cat  <<<"""<<< "haha" <<<"""<<<"hoho" <<< "!"
+""<<< "haha" <<<"""<<<"hoho" <<< "!
+[rshell]hzhu007@hammer.cs.ucr.edu $ exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sun 17 May 2015 01:14:47 AM PDT
+Script started on Sun 17 May 2015 01:16:26 AM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ rshell/bin
+bash: rshell/bin: No such file or directory
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #output redirection >
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls #There is not a or b
+bin  LICENSE  Makefile	README.md  src	tests
+[rshell]hzhu007@hammer.cs.ucr.edu $    ls   >    a
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls;cat a
+a  bin	LICENSE  Makefile  README.md  src  tests
+a
+bin
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -al>b
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls;cat b
+a  b  bin  LICENSE  Makefile  README.md  src  tests
+total 60
+drwx------  6 hzhu007 csmajs  4096 May 17 01:10 .
+drwx------ 15 hzhu007 csmajs  4096 May 17 01:08 ..
+-rw-------  1 hzhu007 csmajs    43 May 17 01:10 a
+-rw-------  1 hzhu007 csmajs     0 May 17 01:10 b
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 bin
+drwx------  8 hzhu007 csmajs  4096 May 16 21:14 .git
+-rw-------  1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw-------  1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw-------  1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------  2 hzhu007 csmajs  4096 May 17 01:08 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls ---  >a
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls>
+Need input after '>'
+[rshell]hzhu007@hammer.cs.ucr.edu $ > c
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat c
+[rshell]hzhu007@hammer.cs.ucr.edu $ >
+Need input after '>'
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -al > a1>a2 > a3 >   a4   >a5
+[rshell]hzhu007@hammer.cs.ucr.edu $ s ls
+a  a1  a2  a3  a4  a5  b  bin  c  LICENSE  Makefile  README.md	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls;cat a1;cat a2;cat a3;cat a4
+a  a1  a2  a3  a4  a5  b  bin  c  LICENSE  Makefile  README.md	src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a5
+total 64
+drwx------  6 hzhu007 csmajs  4096 May 17 01:11 .
+drwx------ 15 hzhu007 csmajs  4096 May 17 01:08 ..
+-rw-------  1 hzhu007 csmajs     0 May 17 01:10 a
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a2
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a5
+-rw-------  1 hzhu007 csmajs   592 May 17 01:10 b
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw-------  1 hzhu007 csmajs     0 May 17 01:10 c
+drwx------  8 hzhu007 csmajs  4096 May 16 21:14 .git
+-rw-------  1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw-------  1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw-------  1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------  2 hzhu007 csmajs  4096 May 17 01:08 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls --- 0>a
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls --- 1>a
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls  1>a
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls --- 3>b
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat b
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat c
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls ---2>c
+ls: unrecognized option '---2'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat c
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls ---  2>c
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat c
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -al 2> b12>a2 > b3 >   b4   2>b5
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls
+a  a1  a2  a3  a4  a5  b  b12  b3  b4  b5  bin	c  LICENSE  Makefile  README.md  src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat b12;cat a2;cat b3
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat b4
+total 68
+drwx------  6 hzhu007 csmajs  4096 May 17 01:13 .
+drwx------ 15 hzhu007 csmajs  4096 May 17 01:08 ..
+-rw-------  1 hzhu007 csmajs    62 May 17 01:12 a
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw-------  1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw-------  1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw-------  1 hzhu007 csmajs     0 May 17 01:12 b
+-rw-------  1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw-------  1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw-------  1 hzhu007 csmajs     0 May 17 01:13 b4
+-rw-------  1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw-------  1 hzhu007 csmajs    68 May 17 01:12 c
+drwx------  8 hzhu007 csmajs  4096 May 16 21:14 .git
+-rw-------  1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw-------  1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw-------  1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------  2 hzhu007 csmajs  4096 May 17 01:08 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat b5
+[rshell]hzhu007@hammer.cs.ucr.edu $ #output redirection >>
+[rshell]hzhu007@hammer.cs.ucr.edu $   ls   >>  d
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls;cat d
+a  a1  a2  a3  a4  a5  b  b12  b3  b4  b5  bin	c  d  LICENSE  Makefile  README.md  src  tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -l>>a        cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -l>>a
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -w >> d 
+ls: option requires an argument -- 'w'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat d
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls>>
+Need input after ">>"
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat c
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ >> c
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat c
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ >>
+Need input after ">>"
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls -a >> a1>>a2 >> a3 >>   a4   >>a5
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a1;cat a2;cat a3;cat a4
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a5
+total 64
+drwx------  6 hzhu007 csmajs  4096 May 17 01:11 .
+drwx------ 15 hzhu007 csmajs  4096 May 17 01:08 ..
+-rw-------  1 hzhu007 csmajs     0 May 17 01:10 a
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a2
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw-------  1 hzhu007 csmajs     0 May 17 01:11 a5
+-rw-------  1 hzhu007 csmajs   592 May 17 01:10 b
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw-------  1 hzhu007 csmajs     0 May 17 01:10 c
+drwx------  8 hzhu007 csmajs  4096 May 16 21:14 .git
+-rw-------  1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw-------  1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw-------  1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------  2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------  2 hzhu007 csmajs  4096 May 17 01:08 tests
+.
+..
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+.git
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls --- 0>>a
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls --- 1>>a
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls  1>>a
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls --- 3>>b
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat b
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls ---2>>c
+ls: unrecognized option '---2'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat c
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls ---  2>>a
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ #pipe
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls|cat
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $   ls  |  cat
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ |
+[rshell]hzhu007@hammer.cs.ucr.edu $   |ls
+a  a1  a2  a3  a4  a5  b  b12  b3  b4  b5  bin	c  d  LICENSE  Makefile  README.md  src  tests
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls|
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat LICENSE| grep IR  #long file test
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS
+REPAIR OR CORRECTION.
+  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
+[rshell]hzhu007@hammer.cs.ucr.edu $ ls | ls -al src | cat | tr a-z A-Z |grep CPP
+-RW------- 1 HZHU007 CSMAJS  3740 MAY  1 23:34 CP.CPP
+-RW------- 1 HZHU007 CSMAJS 14231 MAY 14 11:56 LS.CPP
+-RW------- 1 HZHU007 CSMAJS   844 MAY  6 15:52 MV.CPP
+-RW------- 1 HZHU007 CSMAJS  1289 MAY  6 15:52 RM.CPP
+-RW------- 1 HZHU007 CSMAJS 17554 MAY 17 01:05 RSHELL.CPP
+-RW------- 1 HZHU007 CSMAJS 32768 MAY 17 01:05 .RSHELL.CPP.SWP
+-RW------- 1 HZHU007 CSMAJS   307 MAY 11 21:22 TEST.CPP
+[rshell]hzhu007@hammer.cs.ucr.edu $ #combination            exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sun 17 May 2015 01:28:41 AM PDT
+Script started on Sun 17 May 2015 02:31:32 AM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ #combination
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat < a | tr A-Z a-z|tee new1  |  tr a-z A-Z > new2
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat new1
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+license
+makefile
+readme.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 may 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 may 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 may 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 may 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 may 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 may 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 may 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 may 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 may 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 may 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 apr 15 19:07 license
+-rw------- 1 hzhu007 csmajs   454 may 16 21:16 makefile
+-rw------- 1 hzhu007 csmajs  8407 may 16 21:14 readme.md
+drwx------ 2 hzhu007 csmajs  4096 may 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 may 17 01:08 tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+license
+makefile
+readme.md
+src
+tests
+ls: unrecognized option '---'
+try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat new2
+A
+A1
+A2
+A3
+A4
+A5
+B
+BIN
+C
+LICENSE
+MAKEFILE
+README.MD
+SRC
+TESTS
+TOTAL 64
+-RW------- 1 HZHU007 CSMAJS    62 MAY 17 01:12 A
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:11 A1
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:13 A2
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:11 A3
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:11 A4
+-RW------- 1 HZHU007 CSMAJS   897 MAY 17 01:11 A5
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:12 B
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:13 B12
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:13 B3
+-RW------- 1 HZHU007 CSMAJS  1102 MAY 17 01:13 B4
+-RW------- 1 HZHU007 CSMAJS     0 MAY 17 01:13 B5
+DRWX------ 2 HZHU007 CSMAJS  4096 MAY 17 01:05 BIN
+-RW------- 1 HZHU007 CSMAJS    68 MAY 17 01:12 C
+-RW------- 1 HZHU007 CSMAJS    77 MAY 17 01:15 D
+-RW------- 1 HZHU007 CSMAJS 18047 APR 15 19:07 LICENSE
+-RW------- 1 HZHU007 CSMAJS   454 MAY 16 21:16 MAKEFILE
+-RW------- 1 HZHU007 CSMAJS  8407 MAY 16 21:14 README.MD
+DRWX------ 2 HZHU007 CSMAJS  4096 MAY 17 01:05 SRC
+DRWX------ 2 HZHU007 CSMAJS  4096 MAY 17 01:08 TESTS
+A
+A1
+A2
+A3
+A4
+A5
+B
+B12
+B3
+B4
+B5
+BIN
+C
+D
+LICENSE
+MAKEFILE
+README.MD
+SRC
+TESTS
+LS: UNRECOGNIZED OPTION '---'
+TRY `LS --HELP' FOR MORE INFORMATION.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat <<< "wow!" cpp" | cat > x>> a|ls -al 2> b |   grep cpp |   tr a-z A-Z | sort -n >>c  | cat c
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+license
+makefile
+readme.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 may 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 may 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 may 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 may 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 may 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 may 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 may 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 may 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 may 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 may 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 may 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 apr 15 19:07 license
+-rw------- 1 hzhu007 csmajs   454 may 16 21:16 makefile
+-rw------- 1 hzhu007 csmajs  8407 may 16 21:14 readme.md
+drwx------ 2 hzhu007 csmajs  4096 may 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 may 17 01:08 tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+license
+makefile
+readme.md
+src
+tests
+ls: unrecognized option '---'
+try `ls --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat x
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat a
+a
+a1
+a2
+a3
+a4
+a5
+b
+bin
+c
+LICENSE
+Makefile
+README.md
+src
+tests
+total 64
+-rw------- 1 hzhu007 csmajs    62 May 17 01:12 a
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a1
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 a2
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a3
+-rw------- 1 hzhu007 csmajs     0 May 17 01:11 a4
+-rw------- 1 hzhu007 csmajs   897 May 17 01:11 a5
+-rw------- 1 hzhu007 csmajs     0 May 17 01:12 b
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b12
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b3
+-rw------- 1 hzhu007 csmajs  1102 May 17 01:13 b4
+-rw------- 1 hzhu007 csmajs     0 May 17 01:13 b5
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 bin
+-rw------- 1 hzhu007 csmajs    68 May 17 01:12 c
+-rw------- 1 hzhu007 csmajs    77 May 17 01:15 d
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE
+-rw------- 1 hzhu007 csmajs   454 May 16 21:16 Makefile
+-rw------- 1 hzhu007 csmajs  8407 May 16 21:14 README.md
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:05 src
+drwx------ 2 hzhu007 csmajs  4096 May 17 01:08 tests
+a
+a1
+a2
+a3
+a4
+a5
+b
+b12
+b3
+b4
+b5
+bin
+c
+d
+LICENSE
+Makefile
+README.md
+src
+tests
+ls: unrecognized option '---'
+Try `ls --help' for more information.
+wow!" cpp
+ [rshell]hzhu007@hammer.cs.ucr.edu $ cat b
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat tests/ls.script | grep I | cat ls.script |grep -- #ls.script is a long text more than 20K
+cat: ls.script: No such file or directory
+Usage: grep [OPTION]... PATTERN [FILE]...
+Try `grep --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sun 17 May 2015 02:32:56 AM PDT
