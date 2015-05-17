@@ -16,8 +16,8 @@ where executable is an executable program in the PATH and argumentList is a list
 Anything between two connectors(including the beginning and the end of an input line) would be considered as an executable command and be passed into ```execvp()```. For example, ```;;```would be considered as three empty commands. And ```&&&```would be considered as an empty command and ```&```, which is a wrong command, connected by ```&&```. Notice this is **different** from original bash.
 
 Anything that appears after a ```#``` character will be considered as comment.
-####Redirection and Piping
-Rshell is extended so that it properly handles input redirection ```<```, output redirection ```>``` and ```>>```, and piping ```|```.
+    ####Redirection and Piping
+    Rshell is extended so that it properly handles input redirection ```<```, output redirection ```>``` and ```>>```, and piping ```|```.
 ###ls
 I also implement my own ```ls``` which is a subset of the GNU ```ls``` command.
 
