@@ -285,7 +285,8 @@ g++ compiler
     cat x
     cat a
     cat b
-    cat tests/ls.script | grep I | cat ls.script |grep -- #ls.script is a long text more than 20K
+    cat tests/ls.script | grep I #ls.script is a long text more than 20K
+    cat tests/ls.script | grep I | cat tests/ls.script |grep --
 
 ## Known bugs
 When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit``` only ```ls``` will be executed and *rshell* won't exit.

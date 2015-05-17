@@ -1192,13 +1192,75 @@ ls: unrecognized option '---'
 Try `ls --help' for more information.
 wow!" cpp
  [rshell]hzhu007@hammer.cs.ucr.edu $ cat b
-[rshell]hzhu007@hammer.cs.ucr.edu $ cat tests/ls.script | grep I | cat ls.script |grep -- #ls.script is a long text more than 20K
-cat: ls.script: No such file or directory
-Usage: grep [OPTION]... PATTERN [FILE]...
-Try `grep --help' for more information.
 [rshell]hzhu007@hammer.cs.ucr.edu $ exit
 ~/rshell
 hzhu007@hammer $ exit
 exit
 
 Script done on Sun 17 May 2015 02:32:56 AM PDT
+Script started on Sun 17 May 2015 02:58:58 AM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat tests/ls.script | grep I | cat tests/ls.script |grep -- #ls.script is a long text more than 20K
+Usage: grep [OPTION]... PATTERN [FILE]...
+Try `grep --help' for more information.
+[rshell]hzhu007@hammer.cs.ucr.edu $ cat tests/ls.script | grep I
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+AUTHORS   [0m  cfg.mk        [0m  config.log    [0m  configure.ac[0m  [32;1m[34;1mgnulib-tests [0m  INSTALL [0m  Makefile.in[0m  [32;1mthanks-gen[0m
+[32;1mbootstrap [0m  ChangeLog     [0m  [32;1mconfig.status [0m  COPYING     [0m  GNUmakefile  [0m  Makefile[0m  [32;1m[34;1mold        [0m  TODO      [0m
+AUTHORS   [0m  cfg.mk        [0m  config.log    [0m  configure.ac[0m  [32;1m[34;1mgnulib-tests [0m  INSTALL [0m  Makefile.in[0m  [32;1mthanks-gen[0m
+[32;1mbootstrap [0m  ChangeLog     [0m  [32;1mconfig.status [0m  COPYING     [0m  GNUmakefile  [0m  Makefile[0m  [32;1m[34;1mold        [0m  TODO      [0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+[32;1m[34;1mbranches[0m  COMMIT_EDITMSG[0m  config[0m  description[0m  HEAD[0m  [32;1m[34;1mhooks[0m  index[0m  [32;1m[34;1minfo[0m  [32;1m[34;1mlogs[0m  [32;1m[34;1mobjects[0m  ORIG_HEAD[0m  packed-refs[0m  [32;1m[34;1mrefs[0m
+AUTHORS   [0m  cfg.mk        [0m  config.log    [0m  configure.ac[0m  [32;1m[34;1mgnulib-tests [0m  INSTALL [0m  Makefile.in[0m  [32;1mthanks-gen[0m
+[32;1mbootstrap [0m  ChangeLog     [0m  [32;1mconfig.status [0m  COPYING     [0m  GNUmakefile  [0m  Makefile[0m  [32;1m[34;1mold        [0m  TODO      [0m
+[32;1m[34;1mbranches[0m  COMMIT_EDITMSG[0m  config[0m  description[0m  HEAD[0m  [32;1m[34;1mhooks[0m  index[0m  [32;1m[34;1minfo[0m  [32;1m[34;1mlogs[0m  [32;1m[34;1mobjects[0m  ORIG_HEAD[0m  packed-refs[0m  [32;1m[34;1mrefs[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+AUTHORS   [0m  cfg.mk        [0m  config.log    [0m  configure.ac[0m  [32;1m[34;1mgnulib-tests [0m  INSTALL [0m  Makefile.in[0m  [32;1mthanks-gen[0m
+[32;1mbootstrap [0m  ChangeLog     [0m  [32;1mconfig.status [0m  COPYING     [0m  GNUmakefile  [0m  Makefile[0m  [32;1m[34;1mold        [0m  TODO      [0m
+[32;1m[34;1mbranches[0m  COMMIT_EDITMSG[0m  config[0m  description[0m  HEAD[0m  [32;1m[34;1mhooks[0m  index[0m  [32;1m[34;1minfo[0m  [32;1m[34;1mlogs[0m  [32;1m[34;1mobjects[0m  ORIG_HEAD[0m  packed-refs[0m  [32;1m[34;1mrefs[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+[48;5;243m[32;1m[34;1m.[0m  [48;5;243m[32;1m[34;1m..[0m  [48;5;243m[32;1m[34;1m.git[0m  [32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE[0m
+[32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+-rw-------  1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE[0m
+-rw-------  1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE[0m
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE[0m
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE[0m
+[48;5;243m[32;1m[34;1m.[0m  [48;5;243m[32;1m[34;1m..[0m  [48;5;243m[32;1m[34;1m.git[0m  [32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+ANSIfontUtils.h[0m  README.md[0m
+myhamano.c[0m  output.pdf[0m  outputORIG.pdf[0m  README.md[0m
+[48;5;243m[32;1m[34;1m.[0m  [48;5;243m[32;1m[34;1m..[0m  ANSIfontUtils.h[0m  README.md[0m
+[48;5;243m[32;1m[34;1m.[0m  [48;5;243m[32;1m[34;1m..[0m  myhamano.c[0m  output.pdf[0m  outputORIG.pdf[0m  README.md[0m
+-rw------- 1 hzhu007 csmajs 1845 Apr 22 14:02 ANSIfontUtils.h[0m
+-rw------- 1 hzhu007 csmajs 12941 Apr 22 14:02 outputORIG.pdf[0m
+-rw------- 1 hzhu007 csmajs 1845 Apr 22 14:02 ANSIfontUtils.h[0m
+-rw------- 1 hzhu007 csmajs 12941 Apr 22 14:02 outputORIG.pdf[0m
+-rw------- 1 hzhu007 csmajs 1845 Apr 22 14:02 ANSIfontUtils.h[0m
+-rw------- 1 hzhu007 csmajs 12941 Apr 22 14:02 outputORIG.pdf[0m
+[48;5;243m[32;1m[34;1m.[0m  [48;5;243m[32;1m[34;1m..[0m  [48;5;243m[32;1m[34;1m.git[0m  [32;1m[34;1mbin[0m  LICENSE[0m  Makefile[0m  README.md[0m  [32;1m[34;1msrc[0m  [32;1m[34;1mtests[0m
+-rw-------  1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE[0m
+-rw------- 1 hzhu007 csmajs 1845 Apr 22 14:02 ANSIfontUtils.h[0m
+-rw------- 1 hzhu007 csmajs 12941 Apr 22 14:02 outputORIG.pdf[0m
+-rw------- 1 hzhu007 csmajs 18047 Apr 15 19:07 LICENSE[0m
+-rw------- 1 hzhu007 csmajs 18047 Apr 29 14:23 LICENSE[0m
+-rw------- 1 hzhu007 csmajs   35147 May 01 15:01 COPYING[0m
+-rw------- 1 hzhu007 csmajs   15752 May 01 15:01 INSTALL[0m
+-rw------- 1 hzhu007 csmajs 1845 Apr 22 14:02 ANSIfontUtils.h[0m
+-rw------- 1 hzhu007 csmajs 1845 Apr 22 14:02 ANSIfontUtils.h[0m
+-rw------- 1 hzhu007 csmajs 12941 Apr 22 14:02 outputORIG.pdf[0m
+-rw-------   1 hzhu007 csmajs   24 May 01 19:59 COMMIT_EDITMSG[0m
+-rw-------   1 hzhu007 csmajs   41 Apr 18 17:27 ORIG_HEAD[0m
+[rshell]hzhu007@hammer.cs.ucr.edu $ exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Sun 17 May 2015 02:59:55 AM PDT
