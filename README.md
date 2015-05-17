@@ -17,8 +17,8 @@ Anything between two connectors(including the beginning and the end of an input 
 
 Anything that appears after a ```#``` character will be considered as comment.
 
-####    Redirection and Piping
-Rshell is extended so that it properly handles input redirection ```<```, output redirection ```>``` and ```>>```, and piping ```|```.
+>Redirection and Piping
+>Rshell is extended so that it properly handles input redirection ```<```, output redirection ```>``` and ```>>```, and piping ```|```.
 
 ###ls
 I also implement my own ```ls``` which is a subset of the GNU ```ls``` command.
