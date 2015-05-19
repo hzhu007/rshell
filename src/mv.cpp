@@ -16,13 +16,14 @@ int main(int argc, char *argv[]) {
 	char temp[100];
 	int i = stat(argv[1], &buf);
 	if(i == -1) {
-		cerr << "file does not exist" << endl;
+		perror("file does not exist");
 		exit(1);
 	}
 	i = stat(argv[2], &buf);
 	if(i == -1) {
 		link(argv[1], argv[2]);
 		unlink(argv[1]);
+        perror("stat");
 	}
 	if(S_ISREG(buf.st_mode)) {
 		cerr << "file already exists" << endl;
@@ -36,12 +37,13 @@ int main(int argc, char *argv[]) {
 		if(i == -1) {
 			link(argv[1], temp);
 			unlink(argv[1]);
+            perror("stat");
 		}
 		else {
 			cerr << "file already exists" << endl;
 			exit(1);
 		}
 	}
-	
+
 	return 0;
 }

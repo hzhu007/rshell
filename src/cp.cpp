@@ -111,6 +111,8 @@ int main(int argc, char **argv) {
         cout<<"Fail: "<<argv[2]<<" already exists"<<endl;
         exit(1);
     }
+    else
+        perror("stat");
     if (argc==4) {
         Timer t1,t2,t3;
         double eTime1,eTime2,eTime3;

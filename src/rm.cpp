@@ -20,13 +20,23 @@ void removeDir(const char *curr) {
 		perror("Error with opendir");
 		exit(1);
 	}
+    errno = 0;
 	while(NULL != (filespecs = readdir(dirp))) {
-		if(strcmp(filespecs->d_name, ".") == 0 || strcmp(filespecs->d_name, "..") == 0)
+		if(errno != 0)
+        {
+            perror("readdir()");
+            exit(1);
+        }
+        if(strcmp(filespecs->d_name, ".") == 0 || strcmp(filespecs->d_name, "..") == 0)
 		continue;
 		strcpy(temp, curr);
 		strcat(temp, "/");
 		strcat(temp, filespecs->d_name);
-		stat(temp, &buf);
+		if(-1 == stat(temp, &buf))
+        {
+            perror("stat()");
+            exit(1);
+        }
 		if(S_ISREG(buf.st_mode))
 		{
 			unlink(temp);
@@ -53,7 +63,11 @@ int main(int argc, char *argv[]) {
 			param_r = true;
 		}
 		else{
-			stat(argv[i], &buf);
+			if( -1 == stat(argv[i], &buf))
+            {
+                perror("stat");
+                exit(1);
+            }
 			if(S_ISREG(buf.st_mode))
 			{
 				unlink(argv[i]);
@@ -65,7 +79,7 @@ int main(int argc, char *argv[]) {
 				else
 					cerr << "It's a folder";
 			}
-		}						
+		}
 
 	}
 
