@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <signal.h>
 
 using namespace std;
 
@@ -40,6 +42,10 @@ struct redirection
     }
 };
 
+void intHandler(int)
+{
+
+}
 
 
 int main()
@@ -68,6 +74,7 @@ void display_info()    // print prompt "[rshell]user@host $ "
 {
     char* userName;
     char hostName[100];
+    char* currAddr = new char[1024];
     if(NULL == (userName = getlogin()))
     {
         perror("getlogin()");
@@ -78,7 +85,10 @@ void display_info()    // print prompt "[rshell]user@host $ "
         perror("gethostname()");
         exit(1);
     }
-    printf("[rshell]%s@%s $ ", userName, hostName);
+    if(NULL == getcwd(currAddr, 1024))
+        perror("getcwd()");
+    printf("[rshell]%s@%s:%s $ ", userName, hostName, currAddr);
+    delete[] currAddr;
 }
 
 char* command_input()   //get input and implement some preprocessing
@@ -270,8 +280,44 @@ void execution(char* command)    //deal with one single command
     }
     //if(NULL == argv[0])
     //    argv[0] = nonCmd;
+
+    /* execute exit */
     if(NULL != argv[0] && 0 == strcmp(argv[0], "exit"))
         exit(0);
+
+    /* execute cd */
+    if(NULL != argv[0] && 0 == strcmp(argv[0], "cd"))
+    {
+        char newDir[1024];      //store the directory to be changed to
+        char currDir[1024];     //store the current directory
+        strcpy(currDir, getenv("PWD"));
+        errno = 0;
+        if(NULL == argv[1])
+        {// cd
+            strcpy(newDir, getenv("HOME"));
+        }
+        else if(0 == strcmp(argv[1], "-"))
+        {// cd -
+            strcpy(newDir, getenv("OLDPWD"));
+        }
+        else
+        {// cd <PATH>
+            strcpy(newDir, argv[1]);
+        }
+        chdir(newDir);
+        if(0 == errno)
+        {// update PWD and OLDPWD
+            //if newDir = currDir, don't change OLDPWD
+            if(0 != strcmp(currDir, newDir))
+                setenv("OLDPWD", currDir, 1);
+            setenv("PWD", newDir, 1);
+        }
+        else
+        {
+            perror("chdir() in execution()");
+        }
+        return;
+    }
 
     pid_t pid = fork();
     if(-1 == pid)    //fork error

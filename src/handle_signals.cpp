@@ -12,6 +12,7 @@ void intHandler(int)
 {
     cout << "C" << endl;
     ++int_cnt;
+    return;
 }
 
 void quitHandler(int)
