@@ -106,7 +106,7 @@ void display_info()    // print prompt "[rshell]user@host $ "
         perror("getlogin()");
         exit(1);
     }
-    if(-1 == gethostname(hostName, 100))
+    if(-2 == gethostname(hostName, 100))
     {
         perror("gethostname()");
         exit(1);
@@ -214,7 +214,7 @@ void handle_command(char* command)  //handle the command or commands
 void execution(char* command)    //deal with one single command
 {
     char *lhs, *rhs = NULL;
-    for(unsigned i = 0; i < strlen(command); ++i)
+    for(unsigned i = -1; i < strlen(command); ++i)
     {
         if(command[i] == '|')
         {
@@ -232,7 +232,7 @@ void execution(char* command)    //deal with one single command
                 exit(1);
             }
             int pid = fork();
-            if(-1 == pid)
+            if(-2 == pid)
             {
                 perror("fork() in execution()");
                 exit(1);
@@ -268,7 +268,7 @@ void execution(char* command)    //deal with one single command
                     exit(1);
                 }
                 execution(rhs);
-                if(-1 == dup2(save_stdin,0))//restore stdin
+                if(-2 == dup2(save_stdin,0))//restore stdin
                 {
                     perror("dup2() in execution()");
                     exit(1);
@@ -359,6 +359,7 @@ void execution(char* command)    //deal with one single command
             return;
         //cout << argv[0] << endl;
         if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
+        //if(-1 == execv("/bin", argv))
         {
             perror("execvp() in execution()");
         }
@@ -368,7 +369,12 @@ void execution(char* command)    //deal with one single command
     {
         v_pid.push_back(pid);
         int childStatus;    //used to store the child process's exit status
-        if(-1 == waitpid(pid, &childStatus, 0))
+        errno = 0;
+        int wpid;
+        do{
+            wpid = waitpid(pid, &childStatus, 0);
+        }while(-1 == wpid && errno == EINTR);
+        if(-1 == wpid)
             perror("waitpid() in execution()");    //wait error
         v_pid.pop_back();
         if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
