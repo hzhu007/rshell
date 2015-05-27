@@ -22,7 +22,7 @@ int handle_redirect(const vector<struct redirection*> &v_redir);
 
 static bool lastSucc = true;    //if last command executed successfully
 static bool jumpCmd = false;    //if ignore the next command
-int save_stdin;
+int save_stdin;     //Used to restore stdin
 
 struct redirection
 {
@@ -42,14 +42,40 @@ struct redirection
     }
 };
 
+/////
+//signal
+/////
+struct sigaction intrpt;
+vector<int> v_pid;
 void intHandler(int)
 {
-
+    if(v_pid.empty())
+    {
+        cout << endl;
+        //cin.ignore();
+        //display_info();
+        return;
+    }
+    else
+    {
+        for(int i = 0; i < v_pid.size(); ++i)
+            kill(v_pid.at(i), SIGKILL);
+        cout << endl;
+        //cin.sync();
+        return;
+    }
 }
 
 
 int main()
 {
+    intrpt.sa_handler = intHandler;
+    sigaction(SIGINT, &intrpt, NULL);
+    //if(SIG_ERR == signal(SIGINT, intHandler))
+    //{
+    //    perror("signal() in main()");
+    //    exit(1);
+    //}
     if(-1 == (save_stdin = dup(0))) //need to restore later or infinite loop
     {
         perror("dup() in main()");
@@ -94,6 +120,8 @@ void display_info()    // print prompt "[rshell]user@host $ "
 char* command_input()   //get input and implement some preprocessing
 {
     string input;
+    cin.clear();
+    //cin.ignore();
     getline(cin, input);    //store input in a string
     char *input_cstr = new char[input.length()+1];
     strcpy(input_cstr, input.c_str());
@@ -338,9 +366,11 @@ void execution(char* command)    //deal with one single command
     }
     else    //parent process
     {
+        v_pid.push_back(pid);
         int childStatus;    //used to store the child process's exit status
         if(-1 == waitpid(pid, &childStatus, 0))
-            perror("wait() in execution()");    //wait error
+            perror("waitpid() in execution()");    //wait error
+        v_pid.pop_back();
         if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
         {                                   //meaning that the command isn't executed correctly
             lastSucc = false;
