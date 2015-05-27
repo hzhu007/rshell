@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <signal.h>
 
 using namespace std;
 
@@ -20,7 +22,7 @@ int handle_redirect(const vector<struct redirection*> &v_redir);
 
 static bool lastSucc = true;    //if last command executed successfully
 static bool jumpCmd = false;    //if ignore the next command
-int save_stdin;
+int save_stdin;     //Used to restore stdin
 
 struct redirection
 {
@@ -40,10 +42,40 @@ struct redirection
     }
 };
 
+/////
+//signal
+/////
+struct sigaction intrpt;
+vector<int> v_pid;
+void intHandler(int)
+{
+    if(v_pid.empty())
+    {
+        cout << endl;
+        //cin.ignore();
+        //display_info();
+        return;
+    }
+    else
+    {
+        for(int i = 0; i < v_pid.size(); ++i)
+            kill(v_pid.at(i), SIGKILL);
+        cout << endl;
+        //cin.sync();
+        return;
+    }
+}
 
 
 int main()
 {
+    intrpt.sa_handler = intHandler;
+    sigaction(SIGINT, &intrpt, NULL);
+    //if(SIG_ERR == signal(SIGINT, intHandler))
+    //{
+    //    perror("signal() in main()");
+    //    exit(1);
+    //}
     if(-1 == (save_stdin = dup(0))) //need to restore later or infinite loop
     {
         perror("dup() in main()");
@@ -68,22 +100,28 @@ void display_info()    // print prompt "[rshell]user@host $ "
 {
     char* userName;
     char hostName[100];
+    char* currAddr = new char[1024];
     if(NULL == (userName = getlogin()))
     {
         perror("getlogin()");
         exit(1);
     }
-    if(-1 == gethostname(hostName, 100))
+    if(-2 == gethostname(hostName, 100))
     {
         perror("gethostname()");
         exit(1);
     }
-    printf("[rshell]%s@%s $ ", userName, hostName);
+    if(NULL == getcwd(currAddr, 1024))
+        perror("getcwd()");
+    printf("[rshell]%s@%s:%s $ ", userName, hostName, currAddr);
+    delete[] currAddr;
 }
 
 char* command_input()   //get input and implement some preprocessing
 {
     string input;
+    cin.clear();
+    //cin.ignore();
     getline(cin, input);    //store input in a string
     char *input_cstr = new char[input.length()+1];
     strcpy(input_cstr, input.c_str());
@@ -176,7 +214,7 @@ void handle_command(char* command)  //handle the command or commands
 void execution(char* command)    //deal with one single command
 {
     char *lhs, *rhs = NULL;
-    for(unsigned i = 0; i < strlen(command); ++i)
+    for(unsigned i = -1; i < strlen(command); ++i)
     {
         if(command[i] == '|')
         {
@@ -194,7 +232,7 @@ void execution(char* command)    //deal with one single command
                 exit(1);
             }
             int pid = fork();
-            if(-1 == pid)
+            if(-2 == pid)
             {
                 perror("fork() in execution()");
                 exit(1);
@@ -230,7 +268,7 @@ void execution(char* command)    //deal with one single command
                     exit(1);
                 }
                 execution(rhs);
-                if(-1 == dup2(save_stdin,0))//restore stdin
+                if(-2 == dup2(save_stdin,0))//restore stdin
                 {
                     perror("dup2() in execution()");
                     exit(1);
@@ -270,8 +308,44 @@ void execution(char* command)    //deal with one single command
     }
     //if(NULL == argv[0])
     //    argv[0] = nonCmd;
+
+    /* execute exit */
     if(NULL != argv[0] && 0 == strcmp(argv[0], "exit"))
         exit(0);
+
+    /* execute cd */
+    if(NULL != argv[0] && 0 == strcmp(argv[0], "cd"))
+    {
+        char newDir[1024];      //store the directory to be changed to
+        char currDir[1024];     //store the current directory
+        strcpy(currDir, getenv("PWD"));
+        errno = 0;
+        if(NULL == argv[1])
+        {// cd
+            strcpy(newDir, getenv("HOME"));
+        }
+        else if(0 == strcmp(argv[1], "-"))
+        {// cd -
+            strcpy(newDir, getenv("OLDPWD"));
+        }
+        else
+        {// cd <PATH>
+            strcpy(newDir, argv[1]);
+        }
+        chdir(newDir);
+        if(0 == errno)
+        {// update PWD and OLDPWD
+            //if newDir = currDir, don't change OLDPWD
+            if(0 != strcmp(currDir, newDir))
+                setenv("OLDPWD", currDir, 1);
+            setenv("PWD", newDir, 1);
+        }
+        else
+        {
+            perror("chdir() in execution()");
+        }
+        return;
+    }
 
     pid_t pid = fork();
     if(-1 == pid)    //fork error
@@ -285,6 +359,7 @@ void execution(char* command)    //deal with one single command
             return;
         //cout << argv[0] << endl;
         if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
+        //if(-1 == execv("/bin", argv))
         {
             perror("execvp() in execution()");
         }
@@ -292,9 +367,16 @@ void execution(char* command)    //deal with one single command
     }
     else    //parent process
     {
+        v_pid.push_back(pid);
         int childStatus;    //used to store the child process's exit status
-        if(-1 == waitpid(pid, &childStatus, 0))
-            perror("wait() in execution()");    //wait error
+        errno = 0;
+        int wpid;
+        do{
+            wpid = waitpid(pid, &childStatus, 0);
+        }while(-1 == wpid && errno == EINTR);
+        if(-1 == wpid)
+            perror("waitpid() in execution()");    //wait error
+        v_pid.pop_back();
         if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
         {                                   //meaning that the command isn't executed correctly
             lastSucc = false;
