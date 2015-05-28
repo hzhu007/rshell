@@ -22,7 +22,7 @@ int handle_redirect(const vector<struct redirection*> &v_redir);
 
 static bool lastSucc = true;    //if last command executed successfully
 static bool jumpCmd = false;    //if ignore the next command
-int save_stdin;     //Used to restore stdin
+int save_stdin;                 //Used to restore stdin
 
 struct redirection
 {
@@ -45,8 +45,9 @@ struct redirection
 /////
 //signal
 /////
+vector<int> v_pid;      //Store the children process ID
+/* interrupt */
 struct sigaction intrpt;
-vector<int> v_pid;
 void intHandler(int)
 {
     if(v_pid.empty())
@@ -59,21 +60,48 @@ void intHandler(int)
     else
     {
         for(int i = 0; i < v_pid.size(); ++i)
-            kill(v_pid.at(i), SIGKILL);
+        {
+            if(-1 == kill(v_pid.at(i), SIGKILL))
+            {
+                perror("kill() in intHandler()");
+                exit(1);
+            }
+        }
         cout << endl;
         //cin.sync();
         return;
     }
+}
+/* stop */
+struct sigaction tstp;
+void stopIgn(int)
+{
+    cout << endl;
+}
+void stopHandler(int)
+{
+    raise(SIGSTOP);
 }
 
 
 int main()
 {
     intrpt.sa_handler = intHandler;
-    sigaction(SIGINT, &intrpt, NULL);
+    if(-1 == sigaction(SIGINT, &intrpt, NULL))
+    {
+        perror("sigaction() in main()");
+        exit(1);
+    }
     //if(SIG_ERR == signal(SIGINT, intHandler))
     //{
     //    perror("signal() in main()");
+    //    exit(1);
+    //}
+    struct sigaction tstp;
+    tstp.sa_handler = stopIgn;
+    //if(-1 == sigaction(SIGTSTP, &tstp, NULL))
+    //{
+    //    perror("sigaction() in main()");
     //    exit(1);
     //}
     if(-1 == (save_stdin = dup(0))) //need to restore later or infinite loop
@@ -113,7 +141,11 @@ void display_info()    // print prompt "[rshell]user@host $ "
     }
     if(NULL == getcwd(currAddr, 1024))
         perror("getcwd()");
-    printf("[rshell]%s@%s:%s $ ", userName, hostName, currAddr);
+    string currAddrStr = currAddr;
+    int homePos = currAddrStr.find(getenv("HOME"));
+    if(0 == homePos)
+        currAddrStr.replace(homePos, strlen(getenv("HOME")), "~");
+    printf("[rshell]%s@%s:%s $ ", userName, hostName, currAddrStr.c_str());
     delete[] currAddr;
 }
 
@@ -213,7 +245,8 @@ void handle_command(char* command)  //handle the command or commands
 
 void execution(char* command)    //deal with one single command
 {
-    char *lhs, *rhs = NULL;
+    /* handle pipe */
+    char *lhs = NULL, *rhs = NULL;
     for(unsigned i = -1; i < strlen(command); ++i)
     {
         if(command[i] == '|')
@@ -332,6 +365,7 @@ void execution(char* command)    //deal with one single command
         {// cd <PATH>
             strcpy(newDir, argv[1]);
         }
+        cout << newDir << endl;
         chdir(newDir);
         if(0 == errno)
         {// update PWD and OLDPWD
@@ -367,6 +401,13 @@ void execution(char* command)    //deal with one single command
     }
     else    //parent process
     {
+        tstp.sa_handler = stopIgn;
+        if(-1 == sigaction(SIGTSTP, &tstp, NULL))
+        //if(SIG_ERR == signal(SIGTSTP, SIG_DFL))
+        {
+            perror("sigaction() in execution()");
+            exit(1);
+        }
         v_pid.push_back(pid);
         int childStatus;    //used to store the child process's exit status
         errno = 0;
