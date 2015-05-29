@@ -367,3 +367,4 @@ However then I input `fg`, the background process mysteriously kills itself.
     $ ps  #background process still exists
     $ fg  #should bring it back to foreground
     $ ps  #process disappears
+
