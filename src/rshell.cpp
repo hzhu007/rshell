@@ -59,13 +59,18 @@ void intHandler(int)
     }
     else
     {
-        for(int i = 0; i < v_pid.size(); ++i)
+        //for(int i = 0; i < v_pid.size(); ++i)
+        //{
+        //    if(-1 == kill(v_pid.at(i), sigkill))
+        //    {
+        //        perror("kill() in inthandler()");
+        //        exit(1);
+        //    }
+        //}
+        if(-1 == kill(v_pid.back(), SIGKILL))
         {
-            if(-1 == kill(v_pid.at(i), SIGKILL))
-            {
-                perror("kill() in intHandler()");
-                exit(1);
-            }
+            perror("kill() in inthandler()");
+            exit(1);
         }
         cout << endl;
         //cin.sync();
@@ -73,6 +78,7 @@ void intHandler(int)
     }
 }
 /* stop */
+vector<int> v_stp_pid;
 struct sigaction tstp;
 void stopIgn(int)
 {
@@ -80,7 +86,19 @@ void stopIgn(int)
 }
 void stopHandler(int)
 {
-    raise(SIGSTOP);
+    if(!v_pid.empty())
+    {
+        int recent_pid = v_pid.back();
+        if(kill(recent_pid, SIGSTOP))
+        {
+            perror("Kill() in stopHandler()");
+            exit(1);
+        }
+        v_stp_pid.push_back(recent_pid);
+        cout << endl;
+    }
+    else
+        cout << endl;
 }
 
 
@@ -98,12 +116,12 @@ int main()
     //    exit(1);
     //}
     struct sigaction tstp;
-    tstp.sa_handler = stopIgn;
-    //if(-1 == sigaction(SIGTSTP, &tstp, NULL))
-    //{
-    //    perror("sigaction() in main()");
-    //    exit(1);
-    //}
+    tstp.sa_handler = stopHandler;
+    if(-1 == sigaction(SIGTSTP, &tstp, NULL))
+    {
+        perror("sigaction() in main()");
+        exit(1);
+    }
     if(-1 == (save_stdin = dup(0))) //need to restore later or infinite loop
     {
         perror("dup() in main()");
@@ -134,7 +152,7 @@ void display_info()    // print prompt "[rshell]user@host $ "
         perror("getlogin()");
         exit(1);
     }
-    if(-2 == gethostname(hostName, 100))
+    if(-1 == gethostname(hostName, 100))
     {
         perror("gethostname()");
         exit(1);
@@ -247,7 +265,7 @@ void execution(char* command)    //deal with one single command
 {
     /* handle pipe */
     char *lhs = NULL, *rhs = NULL;
-    for(unsigned i = -1; i < strlen(command); ++i)
+    for(unsigned i = 0; i < strlen(command); ++i)
     {
         if(command[i] == '|')
         {
@@ -265,7 +283,7 @@ void execution(char* command)    //deal with one single command
                 exit(1);
             }
             int pid = fork();
-            if(-2 == pid)
+            if(-1 == pid)
             {
                 perror("fork() in execution()");
                 exit(1);
@@ -301,7 +319,7 @@ void execution(char* command)    //deal with one single command
                     exit(1);
                 }
                 execution(rhs);
-                if(-2 == dup2(save_stdin,0))//restore stdin
+                if(-1 == dup2(save_stdin,0))//restore stdin
                 {
                     perror("dup2() in execution()");
                     exit(1);
@@ -381,6 +399,64 @@ void execution(char* command)    //deal with one single command
         return;
     }
 
+    /* execute fg */
+    if(NULL != argv[0] && 0 == strcmp(argv[0], "fg"))
+    {
+        if(!v_stp_pid.empty())
+        {
+            kill(v_stp_pid.back(), SIGCONT);
+            int childStatus;    //used to store the child process's exit status
+            int wpid;
+            errno = 0;
+            do{
+                wpid = waitpid(v_stp_pid.back(), &childStatus, WUNTRACED);
+            }while(-1 == wpid && errno == EINTR);
+            if(-1 == wpid)
+                perror("waitpid() in execution()");    //wait error
+            v_stp_pid.pop_back();
+            if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
+            {                                   //meaning that the command isn't executed correctly
+                lastSucc = false;
+            }
+            else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
+            {                                       //meaning that the command is executed correctly
+                lastSucc = true;
+            }
+        }
+        else
+            cerr << "No stopped job" << endl;
+        return;
+    }
+
+    /* execute bg */
+    if(NULL != argv[0] && 0 == strcmp(argv[0], "bg"))
+    {
+        if(!v_stp_pid.empty())
+        {
+            kill(v_stp_pid.back(), SIGCONT);
+            //int childStatus;    //used to store the child process's exit status
+            //int wpid;
+            //errno = 0;
+            //do{
+            //    wpid = waitpid(v_stp_pid.back(), &childStatus, WUNTRACED);
+            //}while(-1 == wpid && errno == EINTR);
+            //if(-1 == wpid)
+            //    perror("waitpid() in execution()");    //wait error
+            //v_stp_pid.pop_back();
+            //if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
+            //{                                   //meaning that the command isn't executed correctly
+            //    lastSucc = false;
+            //}
+            //else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
+            //{                                       //meaning that the command is executed correctly
+            //    lastSucc = true;
+            //}
+        }
+        else
+            cerr << "No stopped job" << endl;
+        return;
+    }
+
     pid_t pid = fork();
     if(-1 == pid)    //fork error
     {
@@ -401,23 +477,24 @@ void execution(char* command)    //deal with one single command
     }
     else    //parent process
     {
-        tstp.sa_handler = stopIgn;
-        if(-1 == sigaction(SIGTSTP, &tstp, NULL))
-        //if(SIG_ERR == signal(SIGTSTP, SIG_DFL))
-        {
-            perror("sigaction() in execution()");
-            exit(1);
-        }
+        //tstp.sa_handler = stopIgn;
+        //if(-1 == sigaction(SIGTSTP, &tstp, NULL))
+        ////if(SIG_ERR == signal(SIGTSTP, SIG_DFL))
+        //{
+        //    perror("sigaction() in execution()");
+        //    exit(1);
+        //}
         v_pid.push_back(pid);
         int childStatus;    //used to store the child process's exit status
         errno = 0;
         int wpid;
         do{
-            wpid = waitpid(pid, &childStatus, 0);
+            wpid = waitpid(pid, &childStatus, WUNTRACED);
         }while(-1 == wpid && errno == EINTR);
         if(-1 == wpid)
             perror("waitpid() in execution()");    //wait error
-        v_pid.pop_back();
+        if(!WIFSTOPPED(childStatus))
+           v_pid.pop_back();
         if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
         {                                   //meaning that the command isn't executed correctly
             lastSucc = false;
