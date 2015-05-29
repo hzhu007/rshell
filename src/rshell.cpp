@@ -52,7 +52,7 @@ void intHandler(int)
 {
     if(v_pid.empty())
     {
-        cout << "Nothing";
+        //cout << "Nothing";
         cout << endl;
         //cin.ignore();
         //display_info();
@@ -81,7 +81,7 @@ void intHandler(int)
 }
 /* stop */
 vector<int> v_stp_pid;
-struct sigaction tstp;
+//struct sigaction tstp;
 //void stopIgn(int)
 //{
 //    cout << endl;
@@ -106,6 +106,7 @@ void stopHandler(int)
 
 int main()
 {
+    /* overwrite interrupt */
     intrpt.sa_handler = intHandler;
     if(-1 == sigaction(SIGINT, &intrpt, NULL))
     {
@@ -117,6 +118,7 @@ int main()
     //    perror("signal() in main()");
     //    exit(1);
     //}
+    /* overwrite stop */
     struct sigaction tstp;
     tstp.sa_handler = stopHandler;
     if(-1 == sigaction(SIGTSTP, &tstp, NULL))
@@ -145,7 +147,7 @@ int main()
     return 0;
 }
 
-void display_info()    // print prompt "[rshell]user@host $ "
+void display_info()    // print prompt "[rshell]user@host:<PATH> $ "
 {
     char* userName;
     char hostName[100];
@@ -346,7 +348,10 @@ void execution(char* command)    //deal with one single command
     //char nonCmd[] = "";
     vector<struct redirection*> v_redir;
     if(-1 == get_redirection(command, v_redir))
+    {
+        lastSucc = false;
         return;
+    }
     //for(unsigned i = 0; i < v_redir.size(); ++i)
     //{
     //    cout << "temp: " << v_redir.at(i)->fileName << endl;
@@ -386,7 +391,7 @@ void execution(char* command)    //deal with one single command
         {// cd <PATH>
             strcpy(newDir, argv[1]);
         }
-        cout << newDir << endl;
+        //cout << newDir << endl;
         chdir(newDir);
         if(0 == errno)
         {// update PWD and OLDPWD
@@ -481,8 +486,14 @@ void execution(char* command)    //deal with one single command
     }
     else if(0 == pid)   //child process
     {
+        intrpt.sa_handler = SIG_IGN;
+        if(-1 == sigaction(SIGINT, &intrpt, NULL))
+        {
+            perror("sigaction() in execution()");
+            exit(1);
+        }
         if(-1 == handle_redirect(v_redir))
-            return;
+            exit(1);
         //cout << argv[0] << endl;
         if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
         //if(-1 == execv("/bin", argv))
@@ -503,8 +514,8 @@ void execution(char* command)    //deal with one single command
         if(-1 == wpid)
             perror("waitpid() in execution()");    //wait error
         v_pid.pop_back();
-        if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
-        {                                   //meaning that the command isn't executed correctly
+        if(WEXITSTATUS(childStatus) != 0)       //child process's exit value is not 0
+        {                                       //meaning that the command isn't executed correctly
             lastSucc = false;
         }
         else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
@@ -529,7 +540,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//output redirection >
             int begin = i + 1;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after '>'" << endl;
@@ -562,7 +573,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//output redirection >>
             int begin = i + 2;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {//cannot detect any character
                     cerr << "Need input after \">>\"" << endl;
@@ -594,7 +605,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//input redirection <<<
             int begin = i + 3;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after \"<<<\"" << endl;
@@ -627,7 +638,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//input redirection <
             int begin = i + 1;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after '<'" << endl;
@@ -741,6 +752,7 @@ int handle_redirect(const vector<struct redirection*> &v_redir)
                 break;
         }
         v_redir.at(i)->~redirection();
+        //delete v_redir.at(i);
     }
     return 0;
 }

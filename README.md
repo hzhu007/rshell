@@ -192,110 +192,110 @@ g++ compiler
     $ bin/ls -R scr/a.out   ./README.md   ../.vimrc Makefile   ./src/ls.cpp -Ra -l  ../ucr-cs100/textbook .git -aR ./src src/ -l bin -l -R -a
 ###Redirection and piping
     #input redirection <
-    cat < src/Timer.h
-    grep cout<src/Timer.h
-       cat    <   src/Timer.h
-    cat < nonexist
-    cat <
-    <  src/Timer.h
-      <  src/test
-    cat<src/ls.cpp<src/cp.cpp<  src/mv.cpp  <  src/rshell.cpp  <  src/Timer.h
+    $ cat < src/Timer.h
+    $ grep cout<src/Timer.h
+    $    cat    <   src/Timer.h
+    $ cat < nonexist
+    $ cat <
+    $ <  src/Timer.h
+    $   <  src/test
+    $ cat<src/ls.cpp<src/cp.cpp<  src/mv.cpp  <  src/rshell.cpp  <  src/Timer.h
 
     #input redirection <<<
-        cat   <<<    "haha"
-    grep 2 -a<<<"1a 2b 3c 4d"
-    cat <<< """"
-       cat <<< """
-    cat <<<
-    <<<
-        cat  <<<"""<<< "haha" <<<"""<<<"hoho" <<< "!"
+    $     cat   <<<    "haha"
+    $ grep 2 -a<<<"1a 2b 3c 4d"
+    $ cat <<< """"
+    $    cat <<< """
+    $ cat <<<
+    $ <<<
+    $     cat  <<<"""<<< "haha" <<<"""<<<"hoho" <<< "!"
 
     #output redirection >
-    ls #There is not a or b
-       ls   >    a
-    ls;cat a
-    ls -al>b
-    ls;cat b
-    ls ---  >a
-    cat a
-    ls>
-    > c
-    cat c
-    >
-    ls -al > a1>a2 > a3 >   a4   >a5
-    ls;cat a1;cat a2;cat a3;cat a4
-    cat a5
-    cat a
-    ls --- 0>a
-    cat a
-    ls --- 1>a
-    cat a
-    ls  1>a
-    cat a
-    ls --- 3>b
-    cat b
-    cat c
-    ls ---2>c
-    cat c
-    ls ---  2>c
-    cat c
-    ls -al 2> b12>b2 > b3 >   b4   2>b5
-    ls
-    cat b12;cat b2;cat b3
-    cat b4
-    cat b5
+    $ ls #There is not a or b
+    $    ls   >    a
+    $ ls;cat a
+    $ ls -al>b
+    $ ls;cat b
+    $ ls ---  >a
+    $ cat a
+    $ ls>
+    $ > c
+    $ cat c
+    $ >
+    $ ls -al > a1>a2 > a3 >   a4   >a5
+    $ ls;cat a1;cat a2;cat a3;cat a4
+    $ cat a5
+    $ cat a
+    $ ls --- 0>a
+    $ cat a
+    $ ls --- 1>a
+    $ cat a
+    $ ls  1>a
+    $ cat a
+    $ ls --- 3>b
+    $ cat b
+    $ cat c
+    $ ls ---2>c
+    $ cat c
+    $ ls ---  2>c
+    $ cat c
+    $ ls -al 2> b12>b2 > b3 >   b4   2>b5
+    $ ls
+    $ cat b12;cat b2;cat b3
+    $ cat b4
+    $ cat b5
 
     #output redirection >>
-      ls   >>  d
-    ls;cat d
-    cat a
-    ls -l>>a
-    cat a
-    ls -w >> d
-    cat d
-    ls>>
-    cat c
-    >> c
-    cat c
-    >>
-    ls -a >> a1>>a2 >> a3 >>   a4   >>a5
-    cat a1;cat a2;cat a3;cat a4
-    cat a5
-    ls --- 0>>a
-    cat a
-    ls --- 1>>a
-    cat a
-    ls  1>>a
-    cat a
-    cat b
-    ls --- 3>>b
-    cat b
-    ls ---2>>c
-    cat c
-    cat a
-    ls ---  2>>a
-    cat a
+    $   ls   >>  d
+    $ ls;cat d
+    $ cat a
+    $ ls -l>>a
+    $ cat a
+    $ ls -w >> d
+    $ cat d
+    $ ls>>
+    $ cat c
+    $ >> c
+    $ cat c
+    $ >>
+    $ ls -a >> a1>>a2 >> a3 >>   a4   >>a5
+    $ cat a1;cat a2;cat a3;cat a4
+    $ cat a5
+    $ ls --- 0>>a
+    $ cat a
+    $ ls --- 1>>a
+    $ cat a
+    $ ls  1>>a
+    $ cat a
+    $ cat b
+    $ ls --- 3>>b
+    $ cat b
+    $ ls ---2>>c
+    $ cat c
+    $ cat a
+    $ ls ---  2>>a
+    $ cat a
 
     #pipe
-    ls|cat
-      ls  |  cat
-    |
-      |ls
-    ls|
-    cat LICENSE| grep IR  #long file test
-    ls | ls -al src | cat | tr a-z A-Z |grep CPP
+    $ ls|cat
+    $   ls  |  cat
+    $ |
+    $   |ls
+    $ ls|
+    $ cat LICENSE| grep IR  #long file test
+    $ ls | ls -al src | cat | tr a-z A-Z |grep CPP
 
     #combination
-    cat a
-    cat < a | tr A-Z a-z|tee new1  |  tr a-z A-Z > new2
-    cat new1
-    cat new2
-    cat <<< "wow!" cpp" | cat > x>> a|ls -al 2> b |   grep cpp |   tr a-z A-Z | sort -n >>c  | cat c
-    cat x
-    cat a
-    cat b
-    cat tests/ls.script | grep I #ls.script is a long text more than 20K
-    cat tests/ls.script | grep I | cat tests/ls.script |grep --
+    $ cat a
+    $ cat < a | tr A-Z a-z|tee new1  |  tr a-z A-Z > new2
+    $ cat new1
+    $ cat new2
+    $ cat <<< "wow!" cpp" | cat > x>> a|ls -al 2> b |   grep cpp |   tr a-z A-Z | sort -n >>c  | cat c
+    $ cat x
+    $ cat a
+    $ cat b
+    $ cat tests/ls.script | grep I #ls.script is a long text more than 20K
+    $ cat tests/ls.script | grep I | cat tests/ls.script |grep --
 
 ###cd and signals
     # cd <path>
@@ -307,6 +307,7 @@ g++ compiler
     $ cd /
     $ cd .////
     $ cd .////home///csmajs/..///
+    $ cd nonexistent
 
     # cd -
     $ cd csmajs/hzhu007/rshell/ #go back
