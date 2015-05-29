@@ -288,6 +288,58 @@ g++ compiler
     cat tests/ls.script | grep I #ls.script is a long text more than 20K
     cat tests/ls.script | grep I | cat tests/ls.script |grep --
 
+###cd and signals
+    # cd <path>
+    $ cd ./
+    $ cd .
+    $ cd ../
+    $ cd   rshell/src
+    $ cd ../test/
+    $ cd /
+    $ cd .////
+    $ cd .////home///csmajs/..///
+
+    # cd -
+    $ cd csmajs/hzhu007/rshell/ #go back
+    $ cd -
+    $ cd -
+
+    # cd
+    $ cd
+    $ pwd
+
+    # interrupt
+    $ ^C
+    $ ps
+    $ do.out
+    $ ^C
+    $ ps
+    $ hello.out
+    $ ^C
+    $ ps
+
+    # STOP
+    $ ^Z
+    $ ps
+    $ do.out
+    $ ^Z
+    $ ps
+    $ fg
+    $ ^Z
+    $ do.out
+    $ ^Z
+    $ hello.out
+    $ ^Z
+    $ ps
+    $ fg
+    $ ^C
+    $ ps
+    $ fg
+    $ ^C
+    $ ps
+    $ bg
+    $ kill do.out
+
 ## Known bugs
 When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit``` only ```ls``` will be executed and *rshell* won't exit.
 
