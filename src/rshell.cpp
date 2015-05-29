@@ -68,7 +68,7 @@ void intHandler(int)
         //        exit(1);
         //    }
         //}
-        cout << v_pid.back();
+        //cout << v_pid.back();
         if(-1 == kill(v_pid.back(), SIGKILL))
         {
             perror("kill() in inthandler()");
@@ -377,7 +377,10 @@ void execution(char* command)    //deal with one single command
     {
         char newDir[1024];      //store the directory to be changed to
         char currDir[1024];     //store the current directory
-        strcpy(currDir, getenv("PWD"));
+        //strcpy(currDir, getenv("PWD"));
+        if(NULL == getcwd(currDir, 1024))
+            perror("getcwd()");
+        setenv("PWD", currDir, 1);
         errno = 0;
         if(NULL == argv[1])
         {// cd
