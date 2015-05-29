@@ -303,7 +303,7 @@ g++ compiler
     $ cd .
     $ cd ../
     $ cd   rshell/src
-    $ cd ../test/
+    $ cd ../tests/
     $ cd /
     $ cd .////
     $ cd .////home///csmajs/..///
@@ -322,24 +322,24 @@ g++ compiler
     # interrupt
     $ ^C
     $ ps
-    $ do.out
+    $ src/do.out
     $ ^C
     $ ps
-    $ hello.out
+    $ src/hello.out
     $ ^C
     $ ps
 
     # STOP
     $ ^Z
     $ ps
-    $ do.out
+    $ src/do.out
     $ ^Z
     $ ps
     $ fg
     $ ^Z
-    $ do.out
+    $ src/do.out
     $ ^Z
-    $ hello.out
+    $ src/hello.out
     $ ^Z
     $ ps
     $ fg
