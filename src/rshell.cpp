@@ -404,7 +404,11 @@ void execution(char* command)    //deal with one single command
     {
         if(!v_stp_pid.empty())
         {
-            kill(v_stp_pid.back(), SIGCONT);
+            if(-1 == kill(v_stp_pid.back(), SIGCONT))
+            {
+                perror("kill() in execution()");
+                exit(1);
+            }
             int childStatus;    //used to store the child process's exit status
             int wpid;
             errno = 0;
@@ -433,7 +437,11 @@ void execution(char* command)    //deal with one single command
     {
         if(!v_stp_pid.empty())
         {
-            kill(v_stp_pid.back(), SIGCONT);
+            if(-1 == kill(v_stp_pid.back(), SIGCONT))
+            {
+                perror("kill() in execution()");
+                exit(1);
+            }
             //int childStatus;    //used to store the child process's exit status
             //int wpid;
             //errno = 0;
