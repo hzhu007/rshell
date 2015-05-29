@@ -359,12 +359,13 @@ When files in my folder are too many (more than 150), my ```ls``` may crash (see
 In my program `^C` will only print a new line while there is no job running in foreground.
 But if I stop a process and send it to background then press `^C`, it is supposed to do nothing and in fact it merely print a newline in this case.
 However then I input `fg`, the background process mysteriously kills itself.
-    #Example code
-    $ do.out
-    $ ^Z
-    $ ps
-    $ ^C  #simply print a new line here
-    $ ps  #background process still exists
-    $ fg  #should bring it back to foreground
-    $ ps  #process disappears
-
+```
+#Example code
+$ do.out
+$ ^Z
+$ ps
+$ ^C  #simply print a new line here
+$ ps  #background process still exists
+$ fg  #should bring it back to foreground
+$ ps  #process disappears
+```
