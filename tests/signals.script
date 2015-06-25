@@ -1,0 +1,144 @@
+Script started on Fri 29 May 2015 02:52:27 PM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ make clean
+rm -rf bin
+~/rshell
+hzhu007@hammer $ mae[Kke
+mkdir bin
+g++ -Wall -Werror -ansi -pedantic ./src/ls.cpp -o bin/ls
+g++ -Wall -Werror -ansi -pedantic ./src/rshell.cpp -o bin/rshell
+~/rshell
+hzhu007@hammer $ bin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ # cd <path>
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ cd ./
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ cd .
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ cd ../
+[rshell]hzhu007@hammer.cs.ucr.edu:~ $ cd   rshell/src
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell/src $ cd ../tests/
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell/tests $ cd /
+[rshell]hzhu007@hammer.cs.ucr.edu:/ $ cd .////
+[rshell]hzhu007@hammer.cs.ucr.edu:/ $ cd .////home///csmajs/..///
+[rshell]hzhu007@hammer.cs.ucr.edu:/home $ cd nonexistent
+chdir() in execution(): No such file or directory
+[rshell]hzhu007@hammer.cs.ucr.edu:/home $ # cd -
+[rshell]hzhu007@hammer.cs.ucr.edu:/home $ cd csmajs/hzhu007/rshell/ #go back
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ cd -
+[rshell]hzhu007@hammer.cs.ucr.edu:/home $ cd -
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ # cd
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ cd 
+[rshell]hzhu007@hammer.cs.ucr.edu:~ $ pwd
+/home/csmajs/hzhu007
+[rshell]hzhu007@hammer.cs.ucr.edu:~ $ cd -
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ exit
+e~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Fri 29 May 2015 02:55:14 PM PDT
+Script started on Fri 29 May 2015 02:59:55 PM PDT
+~
+hzhu007@hammer $ cd rshell
+~/rshell
+hzhu007@hammer $ make run[K[K[K[K[K[K[K[Kbin/rshell
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ # interrupt
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ^C
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ^C
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 7787 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ src/do.out
+x x x x x ^C
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 7792 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ src/hello.out
+hello world!
+hello world!
+hello world!
+^C
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 7929 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ # STOP
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ^Z
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 9013 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ src/do.out
+x x ^Z
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 9024 pts/44   00:00:00 do.out
+ 9033 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ fg
+x x x x ^Z
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ src/do.out
+x x x ^Z
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ src/hello.out
+hello world!
+hello world!
+hello world!
+hello world!
+^Z
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 9024 pts/44   00:00:00 do.out
+ 9067 pts/44   00:00:00 do.out
+ 9080 pts/44   00:00:00 hello.out
+ 9091 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ^C
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 9024 pts/44   00:00:00 do.out
+ 9067 pts/44   00:00:00 do.out
+ 9080 pts/44   00:00:00 hello.out
+ 9114 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ fg
+hello world!
+hello world!
+^C
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 9024 pts/44   00:00:00 do.out
+ 9067 pts/44   00:00:00 do.out
+ 9216 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ fg
+x x ^C
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 9024 pts/44   00:00:00 do.out
+ 9224 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ bg
+x [rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ x x x x x x killx  -x 9x  x x 9024x 
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ ps
+  PID TTY          TIME CMD
+ 7682 pts/44   00:00:00 bash
+ 7772 pts/44   00:00:00 rshell
+ 9024 pts/44   00:00:00 do.out <defunct>
+ 9260 pts/44   00:00:00 ps
+[rshell]hzhu007@hammer.cs.ucr.edu:~/rshell $ exit
+~/rshell
+hzhu007@hammer $ exit
+exit
+
+Script done on Fri 29 May 2015 03:03:07 PM PDT

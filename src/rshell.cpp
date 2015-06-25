@@ -22,7 +22,7 @@ int handle_redirect(const vector<struct redirection*> &v_redir);
 
 static bool lastSucc = true;    //if last command executed successfully
 static bool jumpCmd = false;    //if ignore the next command
-int save_stdin;     //Used to restore stdin
+int save_stdin;                 //Used to restore stdin
 
 struct redirection
 {
@@ -45,12 +45,14 @@ struct redirection
 /////
 //signal
 /////
+vector<int> v_pid;      //Store the children process ID
+/* interrupt */
 struct sigaction intrpt;
-vector<int> v_pid;
 void intHandler(int)
 {
     if(v_pid.empty())
     {
+        //cout << "Nothing";
         cout << endl;
         //cin.ignore();
         //display_info();
@@ -58,24 +60,73 @@ void intHandler(int)
     }
     else
     {
-        for(int i = 0; i < v_pid.size(); ++i)
-            kill(v_pid.at(i), SIGKILL);
+        //for(int i = 0; i < v_pid.size(); ++i)
+        //{
+        //    if(-1 == kill(v_pid.at(i), sigkill))
+        //    {
+        //        perror("kill() in inthandler()");
+        //        exit(1);
+        //    }
+        //}
+        //cout << v_pid.back();
+        if(-1 == kill(v_pid.back(), SIGKILL))
+        {
+            perror("kill() in inthandler()");
+            exit(1);
+        }
         cout << endl;
         //cin.sync();
         return;
     }
 }
+/* stop */
+vector<int> v_stp_pid;
+//struct sigaction tstp;
+//void stopIgn(int)
+//{
+//    cout << endl;
+//}
+void stopHandler(int)
+{
+    if(!v_pid.empty())
+    {
+        int recent_pid = v_pid.back();
+        if(kill(recent_pid, SIGSTOP))
+        {
+            perror("kill() in stopHandler()");
+            exit(1);
+        }
+        v_stp_pid.push_back(recent_pid);
+        cout << endl;
+    }
+    else
+        cout << endl;
+}
 
 
 int main()
 {
+    /* overwrite interrupt */
     intrpt.sa_handler = intHandler;
-    sigaction(SIGINT, &intrpt, NULL);
+    if(-1 == sigaction(SIGINT, &intrpt, NULL))
+    {
+        perror("sigaction() in main()");
+        exit(1);
+    }
     //if(SIG_ERR == signal(SIGINT, intHandler))
     //{
     //    perror("signal() in main()");
     //    exit(1);
     //}
+    /* overwrite stop */
+    struct sigaction tstp;
+    tstp.sa_handler = stopHandler;
+    if(-1 == sigaction(SIGTSTP, &tstp, NULL))
+    {
+        perror("sigaction() in main()");
+        exit(1);
+    }
+
     if(-1 == (save_stdin = dup(0))) //need to restore later or infinite loop
     {
         perror("dup() in main()");
@@ -96,7 +147,7 @@ int main()
     return 0;
 }
 
-void display_info()    // print prompt "[rshell]user@host $ "
+void display_info()    // print prompt "[rshell]user@host:<PATH> $ "
 {
     char* userName;
     char hostName[100];
@@ -106,14 +157,18 @@ void display_info()    // print prompt "[rshell]user@host $ "
         perror("getlogin()");
         exit(1);
     }
-    if(-2 == gethostname(hostName, 100))
+    if(-1 == gethostname(hostName, 100))
     {
         perror("gethostname()");
         exit(1);
     }
     if(NULL == getcwd(currAddr, 1024))
         perror("getcwd()");
-    printf("[rshell]%s@%s:%s $ ", userName, hostName, currAddr);
+    string currAddrStr = currAddr;
+    int homePos = currAddrStr.find(getenv("HOME"));
+    if(0 == homePos)
+        currAddrStr.replace(homePos, strlen(getenv("HOME")), "~");
+    printf("[rshell]%s@%s:%s $ ", userName, hostName, currAddrStr.c_str());
     delete[] currAddr;
 }
 
@@ -213,8 +268,9 @@ void handle_command(char* command)  //handle the command or commands
 
 void execution(char* command)    //deal with one single command
 {
-    char *lhs, *rhs = NULL;
-    for(unsigned i = -1; i < strlen(command); ++i)
+    /* handle pipe */
+    char *lhs = NULL, *rhs = NULL;
+    for(unsigned i = 0; i < strlen(command); ++i)
     {
         if(command[i] == '|')
         {
@@ -232,7 +288,7 @@ void execution(char* command)    //deal with one single command
                 exit(1);
             }
             int pid = fork();
-            if(-2 == pid)
+            if(-1 == pid)
             {
                 perror("fork() in execution()");
                 exit(1);
@@ -268,7 +324,7 @@ void execution(char* command)    //deal with one single command
                     exit(1);
                 }
                 execution(rhs);
-                if(-2 == dup2(save_stdin,0))//restore stdin
+                if(-1 == dup2(save_stdin,0))//restore stdin
                 {
                     perror("dup2() in execution()");
                     exit(1);
@@ -292,7 +348,10 @@ void execution(char* command)    //deal with one single command
     //char nonCmd[] = "";
     vector<struct redirection*> v_redir;
     if(-1 == get_redirection(command, v_redir))
+    {
+        lastSucc = false;
         return;
+    }
     //for(unsigned i = 0; i < v_redir.size(); ++i)
     //{
     //    cout << "temp: " << v_redir.at(i)->fileName << endl;
@@ -318,7 +377,10 @@ void execution(char* command)    //deal with one single command
     {
         char newDir[1024];      //store the directory to be changed to
         char currDir[1024];     //store the current directory
-        strcpy(currDir, getenv("PWD"));
+        //strcpy(currDir, getenv("PWD"));
+        if(NULL == getcwd(currDir, 1024))
+            perror("getcwd()");
+        setenv("PWD", currDir, 1);
         errno = 0;
         if(NULL == argv[1])
         {// cd
@@ -332,6 +394,7 @@ void execution(char* command)    //deal with one single command
         {// cd <PATH>
             strcpy(newDir, argv[1]);
         }
+        //cout << newDir << endl;
         chdir(newDir);
         if(0 == errno)
         {// update PWD and OLDPWD
@@ -347,6 +410,77 @@ void execution(char* command)    //deal with one single command
         return;
     }
 
+    /* execute fg */
+    if(NULL != argv[0] && 0 == strcmp(argv[0], "fg"))
+    {
+        if(!v_stp_pid.empty())
+        {
+            //cout << "CONT" << endl;
+            if(-1 == kill(v_stp_pid.back(), SIGCONT))
+            {
+                perror("kill() in execution()");
+                exit(1);
+            }
+            v_pid.push_back(v_stp_pid.back());
+            int childStatus;    //used to store the child process's exit status
+            int wpid;
+            errno = 0;
+            do{
+                wpid = waitpid(v_stp_pid.back(), &childStatus, WUNTRACED);
+            }while(-1 == wpid && errno == EINTR);
+            if(-1 == wpid)
+                perror("waitpid() in execution()");    //wait error
+            v_stp_pid.pop_back();
+            v_pid.pop_back();
+            if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
+            {                                   //meaning that the command isn't executed correctly
+                lastSucc = false;
+            }
+            else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
+            {                                       //meaning that the command is executed correctly
+                lastSucc = true;
+            }
+        }
+        else
+            cerr << "No stopped job" << endl;
+        return;
+    }
+
+    /* execute bg */
+    if(NULL != argv[0] && 0 == strcmp(argv[0], "bg"))
+    {
+        if(!v_stp_pid.empty())
+        {
+            if(-1 == kill(v_stp_pid.back(), SIGCONT))
+            {
+                perror("kill() in execution()");
+                exit(1);
+            }
+            v_stp_pid.pop_back();
+
+            //int childStatus;    //used to store the child process's exit status
+            //int wpid;
+            //errno = 0;
+            //do{
+            //    wpid = waitpid(v_stp_pid.back(), &childStatus, WUNTRACED);
+            //}while(-1 == wpid && errno == EINTR);
+            //if(-1 == wpid)
+            //    perror("waitpid() in execution()");    //wait error
+            //v_stp_pid.pop_back();
+            //if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
+            //{                                   //meaning that the command isn't executed correctly
+            //    lastSucc = false;
+            //}
+            //else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
+            //{                                       //meaning that the command is executed correctly
+            //    lastSucc = true;
+            //}
+        }
+        else
+            cerr << "No stopped job" << endl;
+        return;
+    }
+
     pid_t pid = fork();
     if(-1 == pid)    //fork error
     {
@@ -355,8 +489,14 @@ void execution(char* command)    //deal with one single command
     }
     else if(0 == pid)   //child process
     {
+        intrpt.sa_handler = SIG_IGN;
+        if(-1 == sigaction(SIGINT, &intrpt, NULL))
+        {
+            perror("sigaction() in execution()");
+            exit(1);
+        }
         if(-1 == handle_redirect(v_redir))
-            return;
+            exit(1);
         //cout << argv[0] << endl;
         if(-1 == execvp(argv[0], argv))    //execute one single command, if succeed auto terminate with exit(0)
         //if(-1 == execv("/bin", argv))
@@ -372,13 +512,13 @@ void execution(char* command)    //deal with one single command
         errno = 0;
         int wpid;
         do{
-            wpid = waitpid(pid, &childStatus, 0);
+            wpid = waitpid(pid, &childStatus, WUNTRACED);
         }while(-1 == wpid && errno == EINTR);
         if(-1 == wpid)
             perror("waitpid() in execution()");    //wait error
         v_pid.pop_back();
-        if(WEXITSTATUS(childStatus) != 0)   //child process's exit value is not 0
-        {                                   //meaning that the command isn't executed correctly
+        if(WEXITSTATUS(childStatus) != 0)       //child process's exit value is not 0
+        {                                       //meaning that the command isn't executed correctly
             lastSucc = false;
         }
         else if(WEXITSTATUS(childStatus) == 0)  //child process's exit value is 0
@@ -403,7 +543,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//output redirection >
             int begin = i + 1;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after '>'" << endl;
@@ -436,7 +576,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//output redirection >>
             int begin = i + 2;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {//cannot detect any character
                     cerr << "Need input after \">>\"" << endl;
@@ -468,7 +608,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//input redirection <<<
             int begin = i + 3;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after \"<<<\"" << endl;
@@ -501,7 +641,7 @@ int get_redirection(char* command, vector<struct redirection*> &v_redir)
         {//input redirection <
             int begin = i + 1;    //begin index of file name
             while(command[begin] == ' ' || command[begin] == '\0')
-            {
+            {//remove all spaces before the file name
                 if(command[begin] == '\0')
                 {
                     cerr << "Need input after '<'" << endl;
@@ -615,6 +755,7 @@ int handle_redirect(const vector<struct redirection*> &v_redir)
                 break;
         }
         v_redir.at(i)->~redirection();
+        //delete v_redir.at(i);
     }
     return 0;
 }

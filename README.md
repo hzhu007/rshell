@@ -1,7 +1,8 @@
 #Rshell
 ##Introduction
 ###rshell
-This program is a command shell called *rshell*. Rshell uses syscalls ```fork()```, ```waitpid()``` and ```execvp()``` to execute commands from user input. It can perform the following steps:
+This program is a command shell called *rshell*. Rshell uses syscalls ```fork()```, ```waitpid()``` and ```execvp()``` to execute commands from user input.
+It can perform the following steps:
 
 1. Print a command prompt `[rshell]username@hostname $ `
 
@@ -11,9 +12,13 @@ This program is a command shell called *rshell*. Rshell uses syscalls ```fork()`
     cmd         = executable [ argumentList ] [ connector cmd ];
     connector   = || or && or ;
     ```
-where executable is an executable program in the PATH and argumentList is a list of zero or more arguments separated by spaces. The connector is an optional way you can run multiple commands at once. If a command is followed by ```;```, then the next command is always executed; if a command is followed by ```&&```, then the next command is executed only if the first one succeeds; if a command is followed by ```||```, then the next command is executed only if the first one fails.
+where executable is an executable program in the PATH and argumentList is a list of zero or more arguments separated by spaces.
+The connector is an optional way you can run multiple commands at once.
+If a command is followed by ```;```, then the next command is always executed; if a command is followed by ```&&```, then the next command is executed only if the first one succeeds; if a command is followed by ```||```, then the next command is executed only if the first one fails.
 
-Anything between two connectors(including the beginning and the end of an input line) would be considered as an executable command and be passed into ```execvp()```. For example, ```;;```would be considered as three empty commands. And ```&&&```would be considered as an empty command and ```&```, which is a wrong command, connected by ```&&```. Notice this is **different** from original bash.
+Anything between two connectors(including the beginning and the end of an input line) would be considered as an executable command and be passed into ```execvp()```. For example, ```;;```would be considered as three empty commands.
+And ```&&&```would be considered as an empty command and ```&```, which is a wrong command, connected by ```&&```.
+Notice this is **different** from original bash.
 
 Anything that appears after a ```#``` character will be considered as comment.
 
@@ -23,9 +28,13 @@ Anything that appears after a ```#``` character will be considered as comment.
 ###ls
 I also implement my own ```ls``` which is a subset of the GNU ```ls``` command.
 
-In my ```ls```, only ```-a```(show hidden), ```-l```(long list format) and ```-R```(recursively) optional flags are supported and it has the ability deal with zero, one, or many files. Files and folders will be handled differently, the same as original GNU ```ls``` command.
+In my ```ls```, only ```-a```(show hidden), ```-l```(long list format) and ```-R```(recursively) optional flags are supported and it has the ability deal with zero, one, or many files.
+Files and folders will be handled differently, the same as original GNU ```ls``` command.
 
-Also it will display different types of files in different colors. To be more specific, it print directories in blue, executables in green, and hidden files (with the ```-a``` flag only) with a gray background. These effects should be combinable. So if you have a hidden directory, it should be displayed as blue text on top of a gray background.
+Also it will display different types of files in different colors.
+To be more specific, it print directories in blue, executables in green, and hidden files (with the ```-a``` flag only) with a gray background.
+These effects should be combinable.
+So if you have a hidden directory, it should be displayed as blue text on top of a gray background.
 
 ## Prerequisites
 OS: Linux
@@ -183,112 +192,181 @@ g++ compiler
     $ bin/ls -R scr/a.out   ./README.md   ../.vimrc Makefile   ./src/ls.cpp -Ra -l  ../ucr-cs100/textbook .git -aR ./src src/ -l bin -l -R -a
 ###Redirection and piping
     #input redirection <
-    cat < src/Timer.h
-    grep cout<src/Timer.h
-       cat    <   src/Timer.h
-    cat < nonexist
-    cat <
-    <  src/Timer.h
-      <  src/test
-    cat<src/ls.cpp<src/cp.cpp<  src/mv.cpp  <  src/rshell.cpp  <  src/Timer.h
+    $ cat < src/Timer.h
+    $ grep cout<src/Timer.h
+    $    cat    <   src/Timer.h
+    $ cat < nonexist
+    $ cat <
+    $ <  src/Timer.h
+    $   <  src/test
+    $ cat<src/ls.cpp<src/cp.cpp<  src/mv.cpp  <  src/rshell.cpp  <  src/Timer.h
 
     #input redirection <<<
-        cat   <<<    "haha"
-    grep 2 -a<<<"1a 2b 3c 4d"
-    cat <<< """"
-       cat <<< """
-    cat <<<
-    <<<
-        cat  <<<"""<<< "haha" <<<"""<<<"hoho" <<< "!"
+    $     cat   <<<    "haha"
+    $ grep 2 -a<<<"1a 2b 3c 4d"
+    $ cat <<< """"
+    $    cat <<< """
+    $ cat <<<
+    $ <<<
+    $     cat  <<<"""<<< "haha" <<<"""<<<"hoho" <<< "!"
 
     #output redirection >
-    ls #There is not a or b
-       ls   >    a
-    ls;cat a
-    ls -al>b
-    ls;cat b
-    ls ---  >a
-    cat a
-    ls>
-    > c
-    cat c
-    >
-    ls -al > a1>a2 > a3 >   a4   >a5
-    ls;cat a1;cat a2;cat a3;cat a4
-    cat a5
-    cat a
-    ls --- 0>a
-    cat a
-    ls --- 1>a
-    cat a
-    ls  1>a
-    cat a
-    ls --- 3>b
-    cat b
-    cat c
-    ls ---2>c
-    cat c
-    ls ---  2>c
-    cat c
-    ls -al 2> b12>b2 > b3 >   b4   2>b5
-    ls
-    cat b12;cat b2;cat b3
-    cat b4
-    cat b5
+    $ ls #There is not a or b
+    $    ls   >    a
+    $ ls;cat a
+    $ ls -al>b
+    $ ls;cat b
+    $ ls ---  >a
+    $ cat a
+    $ ls>
+    $ > c
+    $ cat c
+    $ >
+    $ ls -al > a1>a2 > a3 >   a4   >a5
+    $ ls;cat a1;cat a2;cat a3;cat a4
+    $ cat a5
+    $ cat a
+    $ ls --- 0>a
+    $ cat a
+    $ ls --- 1>a
+    $ cat a
+    $ ls  1>a
+    $ cat a
+    $ ls --- 3>b
+    $ cat b
+    $ cat c
+    $ ls ---2>c
+    $ cat c
+    $ ls ---  2>c
+    $ cat c
+    $ ls -al 2> b12>b2 > b3 >   b4   2>b5
+    $ ls
+    $ cat b12;cat b2;cat b3
+    $ cat b4
+    $ cat b5
 
     #output redirection >>
-      ls   >>  d
-    ls;cat d
-    cat a
-    ls -l>>a
-    cat a
-    ls -w >> d
-    cat d
-    ls>>
-    cat c
-    >> c
-    cat c
-    >>
-    ls -a >> a1>>a2 >> a3 >>   a4   >>a5
-    cat a1;cat a2;cat a3;cat a4
-    cat a5
-    ls --- 0>>a
-    cat a
-    ls --- 1>>a
-    cat a
-    ls  1>>a
-    cat a
-    cat b
-    ls --- 3>>b
-    cat b
-    ls ---2>>c
-    cat c
-    cat a
-    ls ---  2>>a
-    cat a
+    $   ls   >>  d
+    $ ls;cat d
+    $ cat a
+    $ ls -l>>a
+    $ cat a
+    $ ls -w >> d
+    $ cat d
+    $ ls>>
+    $ cat c
+    $ >> c
+    $ cat c
+    $ >>
+    $ ls -a >> a1>>a2 >> a3 >>   a4   >>a5
+    $ cat a1;cat a2;cat a3;cat a4
+    $ cat a5
+    $ ls --- 0>>a
+    $ cat a
+    $ ls --- 1>>a
+    $ cat a
+    $ ls  1>>a
+    $ cat a
+    $ cat b
+    $ ls --- 3>>b
+    $ cat b
+    $ ls ---2>>c
+    $ cat c
+    $ cat a
+    $ ls ---  2>>a
+    $ cat a
 
     #pipe
-    ls|cat
-      ls  |  cat
-    |
-      |ls
-    ls|
-    cat LICENSE| grep IR  #long file test
-    ls | ls -al src | cat | tr a-z A-Z |grep CPP
+    $ ls|cat
+    $   ls  |  cat
+    $ |
+    $   |ls
+    $ ls|
+    $ cat LICENSE| grep IR  #long file test
+    $ ls | ls -al src | cat | tr a-z A-Z |grep CPP
 
     #combination
-    cat a
-    cat < a | tr A-Z a-z|tee new1  |  tr a-z A-Z > new2
-    cat new1
-    cat new2
-    cat <<< "wow!" cpp" | cat > x>> a|ls -al 2> b |   grep cpp |   tr a-z A-Z | sort -n >>c  | cat c
-    cat x
-    cat a
-    cat b
-    cat tests/ls.script | grep I #ls.script is a long text more than 20K
-    cat tests/ls.script | grep I | cat tests/ls.script |grep --
+    $ cat a
+    $ cat < a | tr A-Z a-z|tee new1  |  tr a-z A-Z > new2
+    $ cat new1
+    $ cat new2
+    $ cat <<< "wow!" cpp" | cat > x>> a|ls -al 2> b |   grep cpp |   tr a-z A-Z | sort -n >>c  | cat c
+    $ cat x
+    $ cat a
+    $ cat b
+    $ cat tests/ls.script | grep I #ls.script is a long text more than 20K
+    $ cat tests/ls.script | grep I | cat tests/ls.script |grep --
+
+###cd and signals
+    # cd <path>
+    $ cd ./
+    $ cd .
+    $ cd ../
+    $ cd   rshell/src
+    $ cd ../tests/
+    $ cd /
+    $ cd .////
+    $ cd .////home///csmajs/..///
+    $ cd nonexistent
+
+    # cd -
+    $ cd csmajs/hzhu007/rshell/ #go back
+    $ cd -
+    $ cd -
+
+    # cd
+    $ cd
+    $ pwd
+    $ cd -
+
+    # interrupt
+    $ ^C
+    $ ps
+    $ src/do.out
+    $ ^C
+    $ ps
+    $ src/hello.out
+    $ ^C
+    $ ps
+
+    # STOP
+    $ ^Z
+    $ ps
+    $ src/do.out
+    $ ^Z
+    $ ps
+    $ fg
+    $ ^Z
+    $ src/do.out
+    $ ^Z
+    $ src/hello.out
+    $ ^Z
+    $ ps
+    $ fg
+    $ ^C
+    $ ps
+    $ fg
+    $ ^C
+    $ ps
+    $ bg
+    $ kill do.out
 
 ## Known bugs
-When ```exit``` appears after a connector with spaces before it, it doesn't work properly. For example, when input ```ls;  exit``` only ```ls``` will be executed and *rshell* won't exit.
+When ```exit``` appears after a connector with spaces before it, it doesn't work properly
+. For example, when input ```ls;  exit``` only ```ls``` will be executed and *rshell* won't exit.
 
-When files in my folder are too many (more than 150), my ```ls``` may crash (seem to use up heap).
+When files in my folder are too many (more than 150), my ```ls``` may crash (seems to use too much `new` and use up heap).
+
+In my program `^C` will only print a new line while there is no job running in foreground.
+But if I stop a process and send it to background then press `^C`, it is supposed to do nothing and in fact it merely print a newline in this case.
+However then I input `fg`, the background process mysteriously kills itself.
+```
+#Example code
+$ do.out
+$ ^Z
+$ ps
+$ ^C  #simply print a new line here
+$ ps  #background process still exists
+$ fg  #should bring it back to foreground
+$ ps  #process disappears
+```
